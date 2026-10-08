@@ -1,0 +1,858 @@
+[
+ {
+  "rfc": 1166,
+  "area": "misc",
+  "title": "Internet numbers",
+  "obsoleted_by": "",
+  "updated_by": "RFC5737",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 1738,
+  "area": "http",
+  "title": "Uniform Resource Locators (URL)",
+  "obsoleted_by": "RFC4248, RFC4266",
+  "updated_by": "RFC1808, RFC2368, RFC2396, RFC3986, RFC6196, RFC6270, RFC8089",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 2017,
+  "area": "mime",
+  "title": "Definition of the URL MIME External-Body Access-Type",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 2045,
+  "area": "mime",
+  "title": "Multipurpose Internet Mail Extensions (MIME) Part One: Format of Internet Message Bodies",
+  "obsoleted_by": "",
+  "updated_by": "RFC2184, RFC2231, RFC5335, RFC6532",
+  "status": "DRAFT STANDARD"
+ },
+ {
+  "rfc": 2046,
+  "area": "mime",
+  "title": "Multipurpose Internet Mail Extensions (MIME) Part Two: Media Types",
+  "obsoleted_by": "",
+  "updated_by": "RFC2646, RFC3798, RFC5147, RFC6657, RFC8098",
+  "status": "DRAFT STANDARD"
+ },
+ {
+  "rfc": 2392,
+  "area": "http",
+  "title": "Content-ID and Message-ID Uniform Resource Locators",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 2784,
+  "area": "misc",
+  "title": "Generic Routing Encapsulation (GRE)",
+  "obsoleted_by": "",
+  "updated_by": "RFC2890, RFC9601",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 2790,
+  "area": "misc",
+  "title": "Host Resources MIB",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "DRAFT STANDARD"
+ },
+ {
+  "rfc": 2818,
+  "area": "http",
+  "title": "HTTP Over TLS",
+  "obsoleted_by": "RFC9110",
+  "updated_by": "RFC5785, RFC7230",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 3095,
+  "area": "rtp",
+  "title": "RObust Header Compression (ROHC): Framework and four profiles: RTP, UDP, ESP, and uncompressed",
+  "obsoleted_by": "",
+  "updated_by": "RFC3759, RFC4815",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3261,
+  "area": "sip",
+  "title": "SIP: Session Initiation Protocol",
+  "obsoleted_by": "",
+  "updated_by": "RFC3265, RFC3853, RFC4320, RFC4916, RFC5393, RFC5621, RFC5626, RFC5630, RFC5922, RFC5954, RFC6026, RFC6141, RFC6665, RFC6878, RFC7462, RFC7463, RFC8217, RFC8591, RFC8760, RFC8898, RFC8996",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3264,
+  "area": "sdp",
+  "title": "An Offer/Answer Model with Session Description Protocol (SDP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC6157, RFC8843, RFC9143",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3325,
+  "area": "sip",
+  "title": "Private Extensions to the Session Initiation Protocol (SIP) for Asserted Identity within Trusted Networks",
+  "obsoleted_by": "",
+  "updated_by": "RFC5876, RFC8217",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 3326,
+  "area": "sip",
+  "title": "The Reason Header Field for the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC8606, RFC9366",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3394,
+  "area": "key-mgmt",
+  "title": "Advanced Encryption Standard (AES) Key Wrap Algorithm",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 3428,
+  "area": "sip",
+  "title": "Session Initiation Protocol (SIP) Extension for Instant Messaging",
+  "obsoleted_by": "",
+  "updated_by": "RFC8591",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3515,
+  "area": "sip",
+  "title": "The Session Initiation Protocol (SIP) Refer Method",
+  "obsoleted_by": "",
+  "updated_by": "RFC7647, RFC8217",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3550,
+  "area": "rtp",
+  "title": "RTP: A Transport Protocol for Real-Time Applications",
+  "obsoleted_by": "",
+  "updated_by": "RFC5506, RFC5761, RFC6051, RFC6222, RFC7022, RFC7160, RFC7164, RFC8083, RFC8108, RFC8860",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 3551,
+  "area": "rtp",
+  "title": "RTP Profile for Audio and Video Conferences with Minimal Control",
+  "obsoleted_by": "",
+  "updated_by": "RFC5761, RFC7007, RFC8860",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 3602,
+  "area": "misc",
+  "title": "The AES-CBC Cipher Algorithm and Its Use with IPsec",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3605,
+  "area": "sdp",
+  "title": "Real Time Control Protocol (RTCP) attribute in Session Description Protocol (SDP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3711,
+  "area": "srtp",
+  "title": "The Secure Real-time Transport Protocol (SRTP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC5506, RFC6904, RFC9335",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3748,
+  "area": "eap",
+  "title": "Extensible Authentication Protocol (EAP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC5247, RFC7057",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3830,
+  "area": "key-mgmt",
+  "title": "MIKEY: Multimedia Internet KEYing",
+  "obsoleted_by": "",
+  "updated_by": "RFC4738, RFC6309",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3840,
+  "area": "sip",
+  "title": "Indicating User Agent Capabilities in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3841,
+  "area": "sip",
+  "title": "Caller Preferences for the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3856,
+  "area": "sip-events",
+  "title": "A Presence Event Package for the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC8996",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3863,
+  "area": "sip-events",
+  "title": "Presence Information Data Format (PIDF)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3891,
+  "area": "sip",
+  "title": "The Session Initiation Protocol (SIP) \"Replaces\" Header",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3903,
+  "area": "sip",
+  "title": "Session Initiation Protocol (SIP) Extension for Event State Publication",
+  "obsoleted_by": "",
+  "updated_by": "RFC8996",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 3986,
+  "area": "http",
+  "title": "Uniform Resource Identifier (URI): Generic Syntax",
+  "obsoleted_by": "",
+  "updated_by": "RFC7320, RFC8820",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 4028,
+  "area": "sip",
+  "title": "Session Timers in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4122,
+  "area": "misc",
+  "title": "A Universally Unique IDentifier (UUID) URN Namespace",
+  "obsoleted_by": "RFC9562",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4354,
+  "area": "sip-events",
+  "title": "A Session Initiation Protocol (SIP) Event Package and Data Format for Various Settings in Support for the Push-to-Talk over Cellular (PoC) Service",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 4412,
+  "area": "sip",
+  "title": "Communications Resource Priority for the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC7134",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4483,
+  "area": "sip",
+  "title": "A Mechanism for Content Indirection in Session Initiation Protocol (SIP) Messages",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4488,
+  "area": "sip-events",
+  "title": "Suppression of Session Initiation Protocol (SIP) REFER Method Implicit Subscription",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4538,
+  "area": "sip",
+  "title": "Request Authorization through Dialog Identification in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4566,
+  "area": "sdp",
+  "title": "SDP: Session Description Protocol",
+  "obsoleted_by": "RFC8866",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4567,
+  "area": "sdp",
+  "title": "Key Management Extensions for Session Description Protocol (SDP) and Real Time Streaming Protocol (RTSP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4575,
+  "area": "sip-events",
+  "title": "A Session Initiation Protocol (SIP) Event Package for Conference State",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4648,
+  "area": "mime",
+  "title": "The Base16, Base32, and Base64 Data Encodings",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4661,
+  "area": "sip-events",
+  "title": "An Extensible Markup Language (XML)-Based Format for Event Notification Filtering",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4745,
+  "area": "xcap",
+  "title": "Common Policy: A Document Format for Expressing Privacy Preferences",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4771,
+  "area": "srtp",
+  "title": "Integrity Transform Carrying Roll-Over Counter for the Secure Real- time Transport Protocol (SRTP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4825,
+  "area": "xcap",
+  "title": "The Extensible Markup Language (XML) Configuration Access Protocol (XCAP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4826,
+  "area": "xcap",
+  "title": "Extensible Markup Language (XML) Formats for Representing Resource Lists",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4867,
+  "area": "rtp",
+  "title": "RTP Payload Format and File Storage Format for the Adaptive Multi- Rate (AMR) and Adaptive Multi-Rate Wideband (AMR-WB) Audio Codecs",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4964,
+  "area": "sip",
+  "title": "The P-Answer-State Header Extension to the Session Initiation Protocol for the Open Mobile Alliance Push to Talk over Cellular",
+  "obsoleted_by": "",
+  "updated_by": "RFC8996",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 4975,
+  "area": "msrp",
+  "title": "The Message Session Relay Protocol (MSRP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC7977, RFC8591, RFC8873, RFC8996",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 4976,
+  "area": "msrp",
+  "title": "Relay Extensions for the Message Sessions Relay Protocol (MSRP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC7977, RFC8553, RFC8996",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5116,
+  "area": "misc",
+  "title": "An Interface and Algorithms for Authenticated Encryption",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5225,
+  "area": "rtp",
+  "title": "RObust Header Compression Version 2 (ROHCv2): Profiles for RTP, UDP, IP, ESP and UDP-Lite",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5234,
+  "area": "misc",
+  "title": "Augmented BNF for Syntax Specifications: ABNF",
+  "obsoleted_by": "",
+  "updated_by": "RFC7405",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 5288,
+  "area": "misc",
+  "title": "AES Galois Counter Mode (GCM) Cipher Suites for TLS",
+  "obsoleted_by": "",
+  "updated_by": "RFC9325, RFC10015",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5318,
+  "area": "sip",
+  "title": "The Session Initiation Protocol (SIP) P-Refused-URI-List Private- Header (P-Header)",
+  "obsoleted_by": "",
+  "updated_by": "RFC8217",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 5322,
+  "area": "misc",
+  "title": "Internet Message Format",
+  "obsoleted_by": "",
+  "updated_by": "RFC6854",
+  "status": "DRAFT STANDARD"
+ },
+ {
+  "rfc": 5366,
+  "area": "sip",
+  "title": "Conference Establishment Using Request-Contained Lists in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5368,
+  "area": "sip",
+  "title": "Referring to Multiple Resources in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "RFC8262",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5373,
+  "area": "sip",
+  "title": "Requesting Answering Modes for the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5480,
+  "area": "key-mgmt",
+  "title": "Elliptic Curve Cryptography Subject Public Key Information",
+  "obsoleted_by": "",
+  "updated_by": "RFC8813",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5547,
+  "area": "sdp",
+  "title": "A Session Description Protocol (SDP) Offer/Answer Mechanism to Enable File Transfer",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5576,
+  "area": "sdp",
+  "title": "Source-Specific Media Attributes in the Session Description Protocol (SDP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5626,
+  "area": "sip",
+  "title": "Managing Client-Initiated Connections in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5627,
+  "area": "sip",
+  "title": "Obtaining and Using Globally Routable User Agent URIs (GRUUs) in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5761,
+  "area": "rtp",
+  "title": "Multiplexing RTP Data and Control Packets on a Single Port",
+  "obsoleted_by": "",
+  "updated_by": "RFC8035, RFC8858",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5795,
+  "area": "rtp",
+  "title": "The RObust Header Compression (ROHC) Framework",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5875,
+  "area": "xcap",
+  "title": "An Extensible Markup Language (XML) Configuration Access Protocol (XCAP) Diff Event Package",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5888,
+  "area": "sdp",
+  "title": "The Session Description Protocol (SDP) Grouping Framework",
+  "obsoleted_by": "",
+  "updated_by": "RFC8843, RFC9143",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5905,
+  "area": "misc",
+  "title": "Network Time Protocol Version 4: Protocol and Algorithms Specification",
+  "obsoleted_by": "",
+  "updated_by": "RFC7822, RFC8573, RFC9109, RFC9748, RFC9769",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 5952,
+  "area": "misc",
+  "title": "A Recommendation for IPv6 Address Text Representation",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6043,
+  "area": "key-mgmt",
+  "title": "MIKEY-TICKET: Ticket-Based Modes of Key Distribution in Multimedia Internet KEYing (MIKEY)",
+  "obsoleted_by": "",
+  "updated_by": "RFC6309",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 6050,
+  "area": "sip",
+  "title": "A Session Initiation Protocol (SIP) Extension for the Identification of Services",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 6086,
+  "area": "sip",
+  "title": "Session Initiation Protocol (SIP) INFO Method and Package Framework",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6090,
+  "area": "key-mgmt",
+  "title": "Fundamental Elliptic Curve Cryptography Algorithms",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 6135,
+  "area": "msrp",
+  "title": "An Alternative Connection Model for the Message Session Relay Protocol (MSRP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6184,
+  "area": "rtp",
+  "title": "RTP Payload Format for H.264 Video",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6507,
+  "area": "key-mgmt",
+  "title": "Elliptic Curve-Based Certificateless Signatures for Identity-Based Encryption (ECCSI)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 6508,
+  "area": "key-mgmt",
+  "title": "Sakai-Kasahara Key Encryption (SAKKE)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 6509,
+  "area": "key-mgmt",
+  "title": "MIKEY-SAKKE: Sakai-Kasahara Key Encryption in Multimedia Internet KEYing (MIKEY)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 6665,
+  "area": "sip-events",
+  "title": "SIP-Specific Event Notification",
+  "obsoleted_by": "",
+  "updated_by": "RFC7621",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6714,
+  "area": "msrp",
+  "title": "Connection Establishment for Media Anchoring (CEMA) for the Message Session Relay Protocol (MSRP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6749,
+  "area": "oauth",
+  "title": "The OAuth 2.0 Authorization Framework",
+  "obsoleted_by": "",
+  "updated_by": "RFC8252, RFC8996, RFC9700",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6750,
+  "area": "oauth",
+  "title": "The OAuth 2.0 Authorization Framework: Bearer Token Usage",
+  "obsoleted_by": "",
+  "updated_by": "RFC8996, RFC9700",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 6809,
+  "area": "sip",
+  "title": "Mechanism to Indicate Support of Features and Capabilities in the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7159,
+  "area": "misc",
+  "title": "The JavaScript Object Notation (JSON) Data Interchange Format",
+  "obsoleted_by": "RFC8259",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7462,
+  "area": "sip",
+  "title": "URNs for the Alert-Info Header Field of the Session Initiation Protocol (SIP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7515,
+  "area": "oauth",
+  "title": "JSON Web Signature (JWS)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7519,
+  "area": "oauth",
+  "title": "JSON Web Token (JWT)",
+  "obsoleted_by": "",
+  "updated_by": "RFC7797, RFC8725",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7521,
+  "area": "oauth",
+  "title": "Assertion Framework for OAuth 2.0 Client Authentication and Authorization Grants",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7523,
+  "area": "oauth",
+  "title": "JSON Web Token (JWT) Profile for OAuth 2.0 Client Authentication and Authorization Grants",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7614,
+  "area": "sip-events",
+  "title": "Explicit Subscriptions for the REFER Method",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7636,
+  "area": "oauth",
+  "title": "Proof Key for Code Exchange by OAuth Public Clients",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7647,
+  "area": "misc",
+  "title": "Clarifications for the Use of REFER with RFC 6665",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7662,
+  "area": "oauth",
+  "title": "OAuth 2.0 Token Introspection",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 7714,
+  "area": "srtp",
+  "title": "AES-GCM Authenticated Encryption in the Secure Real-time Transport Protocol (SRTP)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 8086,
+  "area": "misc",
+  "title": "GRE-in-UDP Encapsulation",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 8101,
+  "area": "sip",
+  "title": "IANA Registration of New Session Initiation Protocol (SIP) Resource- Priority Namespace for Mission Critical Push To Talk Service",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INFORMATIONAL"
+ },
+ {
+  "rfc": 8200,
+  "area": "misc",
+  "title": "Internet Protocol, Version 6 (IPv6) Specification",
+  "obsoleted_by": "",
+  "updated_by": "RFC9673",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 8259,
+  "area": "misc",
+  "title": "The JavaScript Object Notation (JSON) Data Interchange Format",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 8445,
+  "area": "ice",
+  "title": "Interactive Connectivity Establishment (ICE): A Protocol for Network Address Translator (NAT) Traversal",
+  "obsoleted_by": "",
+  "updated_by": "RFC8863",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 8693,
+  "area": "oauth",
+  "title": "OAuth 2.0 Token Exchange",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 8839,
+  "area": "ice",
+  "title": "Session Description Protocol (SDP) Offer/Answer Procedures for Interactive Connectivity Establishment (ICE)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 9110,
+  "area": "http",
+  "title": "HTTP Semantics",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 9112,
+  "area": "http",
+  "title": "HTTP/1.1",
+  "obsoleted_by": "",
+  "updated_by": "RFC9931",
+  "status": "INTERNET STANDARD"
+ },
+ {
+  "rfc": 9113,
+  "area": "http",
+  "title": "HTTP/2",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ },
+ {
+  "rfc": 9562,
+  "area": "misc",
+  "title": "Universally Unique IDentifiers (UUIDs)",
+  "obsoleted_by": "",
+  "updated_by": "",
+  "status": "PROPOSED STANDARD"
+ }
+]
