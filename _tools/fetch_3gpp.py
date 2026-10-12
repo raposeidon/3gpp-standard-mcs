@@ -8,28 +8,10 @@ import concurrent.futures as cf
 import io
 import re
 import sys
-import time
-import urllib.request
 import zipfile
 
-from common import (ROOT, archive_dir_url, load_specs, main_doc, spec_dir, stem_of,
-                    ver_key, zip_url)
-
-UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-
-
-def fetch(url, retries=3, timeout=120):
-    last = None
-    for attempt in range(retries):
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": UA})
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                return r.read()
-        except Exception as exc:  # noqa: BLE001
-            last = exc
-            time.sleep(2 * (attempt + 1))
-    raise last
+from common import (ROOT, archive_dir_url, doc_code, fetch, load_specs, main_doc, spec_dir,
+                    stem_of, ver_key, zip_url)
 
 
 def latest_code(spec):
@@ -66,11 +48,8 @@ def leftover_zips(out_dir, spec, members):
 
 
 def older_docs(out_dir, spec, code):
-    pat = re.compile(rf"{re.escape(stem_of(spec))}-([0-9a-z]{{3}})", re.I)
     return sorted(p.name for p in out_dir.iterdir()
-                  if p.suffix.lower() in (".doc", ".docx")
-                  and (m := pat.fullmatch(p.stem.replace(".", "")))
-                  and m.group(1).lower() != code)
+                  if (c := doc_code(p.name, spec)) and c != code)
 
 
 def handle(e, dry):
@@ -129,11 +108,8 @@ def attach_from(e, out_dir):
     있다. 폴더에 본문 · 변환본 말고 아무 파일도 없을 때만 받으며, 그 판의 본문은 풀지 않는다.
     """
     spec = e["spec"]
-    doc_pat = re.compile(rf"{re.escape(stem_of(spec))}-[0-9a-z]{{3}}", re.I)
     def is_doc(n):
-        p = n.rsplit("/", 1)[-1]
-        stem, _, ext = p.rpartition(".")
-        return ext.lower() in ("doc", "docx") and bool(doc_pat.fullmatch(stem.replace(".", "")))
+        return doc_code(n.rsplit("/", 1)[-1], spec) is not None
     present = [p for p in out_dir.iterdir()
                if p.is_file() and p.suffix.lower() != ".md" and not is_doc(p.name)]
     if present:

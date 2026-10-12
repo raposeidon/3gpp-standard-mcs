@@ -4,8 +4,10 @@
 아카이브 디렉토리 링크와 함께 "미수집" 으로 표에 남는다.
 """
 import datetime
+import json
 
-from common import ROOT, archive_dir_url, cover, load_specs, main_doc, spec_dir, zip_url
+from common import (HERE, RFC_MCX, ROOT, archive_dir_url, cover, doc_code, load_specs,
+                    main_doc, spec_dir, zip_url)
 
 SECTIONS = [
     ("00-common", "공통 기반 (MCS Common)",
@@ -30,11 +32,18 @@ SECTIONS = [
 ]
 
 
-def extras(d, doc):
-    """규격 폴더에서 본문 · 변환본을 뺀 동봉 파일을 요약한다."""
-    skip = {doc.name, doc.stem + ".md"}
+def extras(d, doc, spec):
+    """규격 폴더에서 본문 · 변환본을 뺀 동봉 파일을 요약한다.
+
+    fetch_3gpp 가 남겨 두는 이전 판 본문은 장별 조각이 아니므로 따로 센다.
+    """
+    olds = {p.stem for p in d.iterdir()
+            if p.is_file() and p != doc and doc_code(p.name, spec)}
+    skip = {doc.name, doc.stem + ".md"} | {s + ".md" for s in olds}
     names = [p.name for p in sorted(d.iterdir()) if p.is_file() and p.name not in skip]
-    if not names:
+    older = [n for n in names if doc_code(n, spec)]
+    names = [n for n in names if n not in older]
+    if not names and not older:
         return "", []
     zips = [n for n in names if n.lower().endswith(".zip")]
     xsd = [n for n in names if n.lower().endswith(".xsd")]
@@ -47,6 +56,8 @@ def extras(d, doc):
             bits.append(f"{label} {len(lst)}종" if len(lst) > 1 else lst[0])
     if parts:
         bits.append(f"본문 조각 {len(parts)}건")
+    if older:
+        bits.append(f"이전 판 본문 {len(older)}건")
     rest = len(names) - len(zips) - len(xsd) - len(xml) - len(yml) - len(parts)
     if rest:
         bits.append(f"기타 {rest}건")
@@ -62,7 +73,7 @@ def collect():
              "md": bool(doc) and (d / f"{doc.stem}.md").exists()}
         if doc:
             r["meta"] = cover(doc)
-            r["extras"], r["parts"] = extras(d, doc)
+            r["extras"], r["parts"] = extras(d, doc, e["spec"])
         rows.append(r)
     return rows
 
@@ -103,6 +114,7 @@ def main():
                   if r["doc"].suffix.lower() == ".doc" and not r["md"])
     parts = sorted(r["e"]["spec"] for r in got if r["parts"])
     today = datetime.date.today().isoformat()
+    n_rfc = len(json.loads((HERE / "rfc_plan.json").read_text(encoding="utf-8")))
 
     L = []
     L.append("# 3GPP MCX 표준 수집 · Markdown 변환 도구\n")
@@ -114,7 +126,7 @@ def main():
              "없는 복제를 금지하므로, 스크립트를 돌려 각자 로컬에 받는다. IETF RFC 는 IETF Trust "
              "Legal Provisions 가 수정 없는 전문 배포를 허용하므로 `10-ietf-rfc/` 에 원문 그대로 "
              "넣어 두었다.\n")
-    L.append(f"- 대상: 3GPP {len(rows)}건 (`_tools/specs.json`) + ITU-T 2건 + IETF RFC 107종")
+    L.append(f"- 대상: 3GPP {len(rows)}건 (`_tools/specs.json`) + ITU-T 2건 + IETF RFC {n_rfc}종")
     L.append(f"- 아래 표의 버전: {today} 에 로컬에 받아 둔 판 기준 "
              f"({len(got)}/{len(rows)}건). 다시 받으면 더 새 판이 나올 수 있다.")
     L.append("- 출처: <https://www.3gpp.org/ftp/Specs/archive/> · <https://www.itu.int/rec/>\n")
@@ -213,7 +225,7 @@ def main():
              "H.265 를 선택으로 규정하고 VVC 는 대상이 아니기 때문이다.\n")
 
     L.append("## IETF RFC (`10-ietf-rfc`)\n")
-    L.append("MCX 본체 규격 16건의 References 절에서 실제로 인용된 RFC 107종을 "
+    L.append(f"MCX 본체 규격 {len(RFC_MCX)}건의 References 절에서 실제로 인용된 RFC {n_rfc}종을 "
              "영역별로 받아 두었다. 목록과 인용 규격 대응은 "
              "[10-ietf-rfc/README.md](10-ietf-rfc/README.md) 에 있다. "
              "26.114 (MTSI) 와 24.229 (IMS) 는 인용 폭이 넓어 그 집합에서 뺐다.\n")

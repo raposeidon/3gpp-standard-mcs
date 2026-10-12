@@ -4,7 +4,7 @@ Mission Critical 계열 3GPP 규격을 **3GPP 아카이브에서 받아 서비�
 
 **3GPP · ITU-T 원문과 그 변환본(md)은 이 저장소에 없다.** 두 기관 모두 서면 허가 없는 복제를 금지하므로, 스크립트를 돌려 각자 로컬에 받는다. IETF RFC 는 IETF Trust Legal Provisions 가 수정 없는 전문 배포를 허용하므로 `10-ietf-rfc/` 에 원문 그대로 넣어 두었다.
 
-- 대상: 3GPP 81건 (`_tools/specs.json`) + ITU-T 2건 + IETF RFC 107종
+- 대상: 3GPP 81건 (`_tools/specs.json`) + ITU-T 2건 + IETF RFC 108종
 - 아래 표의 버전: 2026-10-12 에 로컬에 받아 둔 판 기준 (81/81건). 다시 받으면 더 새 판이 나올 수 있다.
 - 출처: <https://www.3gpp.org/ftp/Specs/archive/> · <https://www.itu.int/rec/>
 
@@ -174,7 +174,7 @@ MCX 코덱 규격이 참조하는 미디어 핸들링과 코덱 본체.
 | [26443-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.443/26443-j00.zip) | TS 26.443 | Codec for Enhanced Voice Services (EVS); ANSI C code (floating-point) | v19.0.0 (Rel-19, 2025-10) | 동봉: 26443-i00-ANSI-C_source_code.zip |
 | [26444-j01.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.444/26444-j01.zip) | TS 26.444 | Codec for Enhanced Voice Services (EVS); Test Sequences | v19.0.1 (Rel-19, 2026-02) | 동봉: 기타 1건 |
 | [26445-j10.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.445/26445-j10.zip) | TS 26.445 | Codec for Enhanced Voice Services (EVS); Detailed Algorithmic Description | v19.1.0 (Rel-19, 2025-12) | **본문이 장별 조각으로 나뉨 - 조각 10건은 md 변환 안 함** / 동봉: 본문 조각 10건 · 기타 1건 |
-| [26446-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.446/26446-j00.zip) | TS 26.446 | Codec for Enhanced Voice Services (EVS); Adaptive Multi-Rate - Wideband (AMR-WB)backward compatible functions | v19.0.0 (Rel-19, 2025-10) |  |
+| [26446-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.446/26446-j00.zip) | TS 26.446 | Codec for Enhanced Voice Services (EVS); Adaptive Multi-Rate - Wideband (AMR-WB) backward compatible functions | v19.0.0 (Rel-19, 2025-10) |  |
 | [26447-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.447/26447-j00.zip) | TS 26.447 | Codec for Enhanced Voice Services (EVS); Error Concealment of Lost Packets | v19.0.0 (Rel-19, 2025-10) |  |
 | [26448-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.448/26448-j00.zip) | TS 26.448 | Codec for Enhanced Voice Services (EVS); Jitter Buffer Management | v19.0.0 (Rel-19, 2025-10) |  |
 | [26449-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.449/26449-j00.zip) | TS 26.449 | Codec for Enhanced Voice Services (EVS); Comfort Noise Generation (CNG) Aspects | v19.0.0 (Rel-19, 2025-10) |  |
@@ -239,7 +239,7 @@ H.266 (VVC) 는 받지 않는다. 26.281 이 H.264 Constrained Baseline 을 필�
 
 ## IETF RFC (`10-ietf-rfc`)
 
-MCX 본체 규격 16건의 References 절에서 실제로 인용된 RFC 107종을 영역별로 받아 두었다. 목록과 인용 규격 대응은 [10-ietf-rfc/README.md](10-ietf-rfc/README.md) 에 있다. 26.114 (MTSI) 와 24.229 (IMS) 는 인용 폭이 넓어 그 집합에서 뺐다.
+MCX 본체 규격 16건의 References 절에서 실제로 인용된 RFC 108종을 영역별로 받아 두었다. 목록과 인용 규격 대응은 [10-ietf-rfc/README.md](10-ietf-rfc/README.md) 에 있다. 26.114 (MTSI) 와 24.229 (IMS) 는 인용 폭이 넓어 그 집합에서 뺐다.
 
 ## 읽을 때 주의할 점
 

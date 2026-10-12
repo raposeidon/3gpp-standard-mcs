@@ -7,19 +7,10 @@ import concurrent.futures as cf
 import json
 import re
 import sys
-import urllib.request
-from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent
+from common import HERE, RFC_MCX, ROOT, fetch
+
 DEST = ROOT / "10-ietf-rfc"
-UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-      "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
-
-# 26.114(MTSI)·24.229(IMS) 는 MCX 전용이 아니라 인용 폭이 넓어 최소 집합에서 뺀다.
-MCX = ["24.379", "24.380", "24.281", "24.581", "24.282", "24.582", "24.283",
-       "24.481", "24.482", "24.483", "24.484", "33.180", "26.179", "26.281",
-       "29.379", "29.582"]
 
 AREAS = [
     ("msrp", r"MSRP|Message Session Relay"),
@@ -30,7 +21,7 @@ AREAS = [
                  r"|Suite B|Multimedia Internet KEYing|Ticket"),
     ("oauth", r"OAuth|JSON Web|Assertion Framework|Token Introspection"
               r"|Code Exchange|Token Revocation"),
-    ("ice", r"\bSTUN\b|\bTURN\b|Interactive Connectivity|NAT"),
+    ("ice", r"\bSTUN\b|\bTURN\b|Interactive Connectivity|\bNAT\b|Network Address Translat"),
     ("eap", r"\bEAP\b|Extensible Authentication"),
     ("sdp", r"Session Description Protocol|\bSDP\b|Offer/Answer"),
     ("sip-events", r"Event (Package|Notification)|Presence|PUBLISH"
@@ -48,10 +39,11 @@ AREAS = [
 def parse_index(path, wanted):
     """rfc-index.txt 에서 필요한 번호의 제목·상태·폐기 정보를 뽑는다."""
     txt = path.read_text(encoding="utf-8", errors="replace")
-    blocks = re.split(r"\n(?=\d{4} )", txt)
+    # 항목은 줄 머리의 번호로 시작하고 이어지는 줄은 들여 쓴다. 번호는 0 을 채우지 않는다 (768).
+    blocks = re.split(r"\n(?=\d{1,5} )", txt)
     out = {}
     for b in blocks:
-        m = re.match(r"(\d{4}) (.*)", b, re.S)
+        m = re.match(r"(\d{1,5}) (.*)", b, re.S)
         if not m:
             continue
         num = int(m.group(1))
@@ -76,17 +68,11 @@ def area_of(title):
     return "misc"
 
 
-def get(url, timeout=120):
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return r.read()
-
-
 def main():
     refs = json.loads((HERE / "rfc_refs.json").read_text(encoding="utf-8"))
     by_rfc = {int(k): v for k, v in refs["by_rfc"].items()}
     wanted = sorted({n for n, specs in by_rfc.items()
-                     if any(s in MCX for s in specs)})
+                     if any(s in RFC_MCX for s in specs)})
     meta = parse_index(HERE / "rfc-index.txt", set(wanted))
     missing = [n for n in wanted if n not in meta]
     if missing:
@@ -115,7 +101,7 @@ def main():
         if out.exists() and out.stat().st_size > 2000:
             return n, "SKIP"
         try:
-            out.write_bytes(get(f"https://www.rfc-editor.org/rfc/rfc{n}.txt"))
+            out.write_bytes(fetch(f"https://www.rfc-editor.org/rfc/rfc{n}.txt"))
             return n, "GET"
         except Exception as exc:  # noqa: BLE001
             return n, f"FAIL {exc}"

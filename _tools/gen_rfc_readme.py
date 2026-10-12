@@ -1,18 +1,14 @@
 """10-ietf-rfc/README.md 를 만든다."""
 import json
 import re
-from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-DEST = HERE.parent / "10-ietf-rfc"
+from common import HERE, RFC_MCX as MCX, ROOT
+
+DEST = ROOT / "10-ietf-rfc"
 
 PLAN = json.loads((HERE / "rfc_plan.json").read_text(encoding="utf-8"))
 REFS = json.loads((HERE / "rfc_refs.json").read_text(encoding="utf-8"))
 BY = {int(k): v for k, v in REFS["by_rfc"].items()}
-
-MCX = ["24.379", "24.380", "24.281", "24.581", "24.282", "24.582", "24.283",
-       "24.481", "24.482", "24.483", "24.484", "33.180", "26.179", "26.281",
-       "29.379", "29.582"]
 
 AREA_TITLE = [
     ("sip", "SIP 코어·확장", "24.379 · 24.281 · 24.282 의 시그널링 기반."),
@@ -60,7 +56,7 @@ def main():
     got = {p["rfc"] for p in PLAN}
     L = []
     L.append("# MCX 구현에 필요한 IETF RFC - 최소 집합\n")
-    L.append("손으로 고른 목록이 아니다. **보유한 MCX 본체 규격 16건의 References 절에서 "
+    L.append(f"손으로 고른 목록이 아니다. **보유한 MCX 본체 규격 {len(MCX)}건의 References 절에서 "
              "실제로 인용된 RFC** 를 모아 영역별로 나눈 것이다. "
              f"모두 {len(PLAN)}종이며 본문은 `rfc<번호>.txt` 로 들어 있다.\n")
     L.append("근거로 삼은 규격: " + " · ".join(MCX) + "\n")
@@ -130,7 +126,7 @@ def main():
     for i in range(0, len(only_new), 10):
         L.append(" ".join(f"RFC{n}" for n in only_new[i:i + 10]))
     L.append("```\n")
-    L.append(f"**빠진 {len(only_old)}종** - 기존 목록에는 있으나 MCX 본체 16건은 "
+    L.append(f"**빠진 {len(only_old)}종** - 기존 목록에는 있으나 MCX 본체 {len(MCX)}건은 "
              "인용하지 않는다. 대부분 24.229 · 26.114 · 33.402 · 24.302 쪽에서 오는 "
              "IMS·접속 기반이라 이 최소 집합의 대상이 아니다.\n")
     L.append("```")

@@ -362,6 +362,29 @@ WORD_PS = (
     "try{$d=$w.Documents.Open($env:SRC_DOC,$false,$true,$false);"
     "$d.SaveAs2($env:DST_DOCX,16);$d.Close($false)}finally{$w.Quit()}"
 )
+# COM 으로 뜬 Word 는 명령줄에 /Automation 이 붙는다 - 사용자가 연 Word 와 구분하는 표지
+WORD_PIDS_PS = ("Get-CimInstance Win32_Process -Filter \"Name='WINWORD.EXE'\" | "
+                "Where-Object CommandLine -match '/Automation' | ForEach-Object ProcessId")
+CONVERT_TIMEOUT = 600  # 초. 24.229(.doc 16 MB) 도 Word 로 수십 초면 끝난다
+
+
+def run_tool(name, cmd, **kw):
+    """변환기를 돌리고, 실패하면 stderr 첫 줄을 담은 RuntimeError 로 바꾼다."""
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=CONVERT_TIMEOUT, **kw)
+    except subprocess.CalledProcessError as exc:
+        # Windows 콘솔 도구는 파이프에 OEM 코드 페이지로 쓴다
+        err = exc.stderr.decode("oem" if os.name == "nt" else "utf-8", "replace")
+        first = next((ln.strip() for ln in err.splitlines() if ln.strip()), "")
+        raise RuntimeError(f"{name} 실패 (종료 코드 {exc.returncode}): {first}") from None
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"{name} 가 {CONVERT_TIMEOUT}초 안에 끝나지 않았다") from None
+
+
+def word_pids():
+    r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", WORD_PIDS_PS],
+                       capture_output=True, text=True, check=False)
+    return {int(x) for x in r.stdout.split() if x.isdigit()}
 
 
 def find_soffice():
@@ -385,16 +408,28 @@ def doc_converter():
     so = find_soffice()
     if so:
         def run(doc, out):
-            subprocess.run([so, "--headless", "--convert-to", "docx", "--outdir", str(out),
-                            str(doc)], check=True, capture_output=True, timeout=1800)
+            # 별도 프로필을 주지 않으면 이미 떠 있는 LibreOffice 에 일을 넘기고
+            # 아무것도 만들지 않은 채 0 으로 끝난다
+            profile = (out / "lo-profile").as_uri()
+            run_tool("LibreOffice", [so, f"-env:UserInstallation={profile}", "--headless",
+                                     "--convert-to", "docx", "--outdir", str(out), str(doc)])
             return out / f"{doc.stem}.docx"
         return "LibreOffice", run
     if has_word():
         def run(doc, out):
             dst = out / f"{doc.stem}.docx"
             env = dict(os.environ, SRC_DOC=str(doc.resolve()), DST_DOCX=str(dst))
-            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", WORD_PS],
-                           check=True, capture_output=True, timeout=1800, env=env)
+            before = word_pids()
+            try:
+                run_tool("Word", ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                                  WORD_PS], env=env)
+            except RuntimeError:
+                # powershell 이 죽어도 COM 이 띄운 Word 는 자식이 아니라 숨은 채 남는다.
+                # 대화상자에 막힌 Word 가 파일을 잡고 쌓이지 않도록 이번에 뜬 것만 끈다.
+                for pid in word_pids() - before:
+                    subprocess.run(["taskkill", "/F", "/PID", str(pid)],
+                                   capture_output=True, check=False)
+                raise
             return dst
         return "Word", run
     return None
@@ -411,14 +446,14 @@ def convert_one(e, force, doc_conv):
     md = d / f"{doc.stem}.md"
     if md.exists() and not force and md.stat().st_mtime >= doc.stat().st_mtime:
         return "SKIP", md.name
-    c = cover(doc)
     _, url = zip_url(e["spec"], code)
     # Word 가 종료 직후 잠시 파일을 잡고 있어 임시 폴더 정리 실패는 무시한다
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         src = doc_conv[1](doc, Path(tmp)) if is_doc else doc
         if not src.is_file():
-            # soffice 는 같은 사용자 인스턴스가 떠 있으면 아무것도 만들지 않고 0 으로 끝난다
             raise RuntimeError(f"{doc_conv[0]} 가 docx 를 만들지 않았다")
+        # .doc 표지는 ASCII 구간만 긁어 손실이 있으므로 변환한 docx 에서 읽는다
+        c = cover(src)
         with zipfile.ZipFile(src) as z:
             conv = Converter(z, d)
             body = conv.convert()
@@ -448,7 +483,7 @@ def main():
         try:
             st, msg = convert_one(e, force, doc_conv)
         except Exception as exc:  # noqa: BLE001
-            st, msg = "FAIL", f"{type(exc).__name__}: {str(exc)[:100]}"
+            st, msg = "FAIL", f"{type(exc).__name__}: {str(exc)[:300]}"
         res.append((e["spec"], st, msg))
         print(f"{st:7s} {e['spec']:12s} {msg}", flush=True)
     print("\n===== 요약 =====")

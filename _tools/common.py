@@ -1,12 +1,38 @@
-"""규격 목록 · 폴더 배치 · 본문 선택 · 표지 추출을 스크립트들이 함께 쓴다."""
+"""규격 목록 · 폴더 배치 · 본문 선택 · 표지 추출 · 내려받기를 스크립트들이 함께 쓴다."""
 import json
 import re
+import time
+import urllib.request
 import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 ARCHIVE = "https://www.3gpp.org/ftp/Specs/archive"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36")
+
+# RFC 인용을 모을 MCX 본체 규격. 코덱 본체 · 시험 규격은 제외한다.
+RFC_SPECS = ["24.379", "24.380", "24.281", "24.581", "24.282", "24.582",
+             "24.283", "24.481", "24.482", "24.483", "24.484", "24.229",
+             "33.180", "26.179", "26.281", "26.114",
+             "23.283", "29.379", "29.380", "29.582"]
+# 10-ietf-rfc 최소 집합의 근거 규격. 26.114(MTSI) · 24.229(IMS) 는 MCX 전용이 아니라
+# 인용 폭이 넓어 빼고, 23.283 · 29.380 은 RFC 를 인용하지 않아 뺀다.
+RFC_MCX = [s for s in RFC_SPECS if s not in ("24.229", "26.114", "23.283", "29.380")]
+
+
+def fetch(url, retries=3, timeout=120):
+    last = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read()
+        except Exception as exc:  # noqa: BLE001
+            last = exc
+            time.sleep(2 * (attempt + 1))
+    raise last
 
 
 def load_specs():
@@ -37,25 +63,31 @@ def zip_url(spec, code):
     return name, archive_dir_url(spec) + name
 
 
-def main_doc(d, spec):
-    """폴더에서 본문(<번호>-<버전>.doc/.docx)을 고른다. 버전이 여럿이면 최신, 같으면 docx.
+def doc_code(name, spec):
+    """본문 파일명(<번호>-<버전>.doc/.docx)이면 버전 코드를, 아니면 None 을 돌려준다.
 
     36.579-9 처럼 파일명에 점이 남은 판본이 있어 점을 지우고 맞춘다.
     장별로 나뉜 조각(26445-j10_1_s05...doc)은 본문으로 보지 않는다.
     """
+    stem, _, ext = name.rpartition(".")
+    if ext.lower() not in ("doc", "docx"):
+        return None
+    m = re.fullmatch(rf"{re.escape(stem_of(spec))}-([0-9a-z]{{3}})", stem.replace(".", ""), re.I)
+    return m.group(1).lower() if m else None
+
+
+def main_doc(d, spec):
+    """폴더에서 본문을 고른다. 버전이 여럿이면 최신, 같으면 docx."""
     if not d.is_dir():
         return None, None
-    pat = re.compile(rf"{re.escape(stem_of(spec))}-([0-9a-z]{{3}})", re.I)
     best = None
     for p in d.iterdir():
-        if not p.is_file() or p.suffix.lower() not in (".doc", ".docx"):
+        code = doc_code(p.name, spec) if p.is_file() else None
+        if not code:
             continue
-        m = pat.fullmatch(p.stem.replace(".", ""))
-        if not m:
-            continue
-        key = (ver_key(m.group(1).lower()), p.suffix.lower() == ".docx")
+        key = (ver_key(code), p.suffix.lower() == ".docx")
         if best is None or key > best[0]:
-            best = (key, p, m.group(1).lower())
+            best = (key, p, code)
     return (best[1], best[2]) if best else (None, None)
 
 
@@ -64,7 +96,9 @@ def main_doc(d, spec):
 # 경계에서 낱말이 쪼개져 "c odecs" 같은 깨진 문자열이 나온다.
 # doc(OLE 바이너리)는 표지 문자열이 CP1252 로 박혀 있어 ASCII 구간만 긁으면 된다.
 
-WT = re.compile(r"<w:t(?:\s[^>]*)?>(.*?)</w:t>", re.S)
+# 문단 안의 줄바꿈 · 탭은 공백으로 친다. 빼면 Word 가 .doc 을 docx 로 저장한 표지에서
+# "based on<w:br/>Session" 이 "based onSession" 으로 붙는다 (24.229).
+WT = re.compile(r"<w:t(?:\s[^>]*)?>(.*?)</w:t>|<w:(?:br|cr|tab)\b[^>]*/>", re.S)
 PARA = re.compile(r"</w:p>")
 HEAD = re.compile(r"3GPP\s+(TS|TR)\s+([\d.]+(?:-\d+)?)\s+V(\d+\.\d+\.\d+)"
                   r"\s*\((\d{4}-\d{2})\)")
@@ -79,12 +113,16 @@ def unesc(s):
              .replace("&quot;", '"').replace("&apos;", "'"))
 
 
+def para_text(para):
+    return "".join(m.group(1) if m.group(1) is not None else " " for m in WT.finditer(para))
+
+
 def docx_lines(path):
     with zipfile.ZipFile(path) as z:
         xml = z.read("word/document.xml").decode("utf-8", "replace")
     out = []
     for para in PARA.split(xml)[:300]:
-        s = unesc("".join(WT.findall(para))).strip()
+        s = unesc(para_text(para)).strip()
         if s:
             out.append(s)
         if len(out) > 60:

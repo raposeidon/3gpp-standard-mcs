@@ -4,17 +4,9 @@ import re
 import zipfile
 from collections import defaultdict
 
-from common import HERE, load_specs, main_doc, spec_dir
+from common import HERE, PARA, RFC_SPECS, load_specs, main_doc, para_text, spec_dir
 
-WT = re.compile(r"<w:t(?:\s[^>]*)?>(.*?)</w:t>", re.S)
-PARA = re.compile(r"</w:p>")
 RFC = re.compile(r"RFC\s*(\d{3,5})", re.I)
-
-# 인용 근거로 삼을 MCX 본체 규격. 코덱 본체·시험규격은 제외한다.
-CORE = ["24.379", "24.380", "24.281", "24.581", "24.282", "24.582",
-        "24.283", "24.481", "24.482", "24.483", "24.484", "24.229",
-        "33.180", "26.179", "26.281", "26.114",
-        "23.283", "29.379", "29.380", "29.582"]
 
 
 def full_text(path):
@@ -23,7 +15,7 @@ def full_text(path):
             xml = z.read("word/document.xml").decode("utf-8", "replace")
         paras = []
         for para in PARA.split(xml):
-            s = "".join(WT.findall(para)).strip()
+            s = para_text(para).strip()
             if s:
                 paras.append(s)
         return "\n".join(paras)
@@ -50,14 +42,13 @@ def main():
     per_spec = {}
     for e in load_specs():
         spec = e["spec"]
-        if spec not in CORE:
+        if spec not in RFC_SPECS:
             continue
         doc, _ = main_doc(spec_dir(e), spec)
         if not doc:
             continue
         sec = refs_section(full_text(doc))
         nums = {int(n) for n in RFC.findall(sec)}
-        nums = {n for n in nums if 1000 <= n <= 9999}
         per_spec[spec] = sorted(nums)
         for n in nums:
             by_rfc[n].add(spec)
@@ -66,7 +57,7 @@ def main():
         json.dumps({"by_rfc": out, "per_spec": per_spec},
                    ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"규격 {len(per_spec)}건에서 RFC {len(by_rfc)}종 인용")
-    for spec in CORE:
+    for spec in RFC_SPECS:
         if spec in per_spec:
             print(f"  {spec}: {len(per_spec[spec])}종")
     print("\n=== 2개 이상 규격이 인용 ===")
