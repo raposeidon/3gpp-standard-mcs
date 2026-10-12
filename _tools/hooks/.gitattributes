@@ -1,0 +1,2 @@
+# shebang 이 CRLF 로 바뀌면 훅이 실행되지 않는다
+* text eol=lf

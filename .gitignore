@@ -1,13 +1,11 @@
-# 3GPP · ITU-T 원문은 저작권상 재배포 불가 - 로컬에만 둔다
-/00-common/
-/01-mcptt/
-/02-mcvideo/
-/03-mcdata/
-/04-mcloc/
-/05-security/
-/06-sip-ims/
-/07-media-codec/
-/08-interworking/
-/09-conformance/
+# 허용 목록 방식 - 아래 ! 줄에 적은 것만 추적한다.
+# 3GPP · ITU-T 원문과 그 변환본은 저작권상 재배포 불가라 로컬에만 둔다.
+# specs.json 에 새 서비스 폴더가 생겨도 추적 대상에 들어가지 않는다.
+# 실수로 git add -f 한 것은 _tools/hooks/pre-commit 이 같은 규칙으로 거부한다.
+/*
+!/.gitignore
+!/README.md
+!/_tools/
+!/10-ietf-rfc/
 
 __pycache__/

@@ -5,12 +5,12 @@ Mission Critical 계열 3GPP 규격을 **3GPP 아카이브에서 받아 서비�
 **3GPP · ITU-T 원문과 그 변환본(md)은 이 저장소에 없다.** 두 기관 모두 서면 허가 없는 복제를 금지하므로, 스크립트를 돌려 각자 로컬에 받는다. IETF RFC 는 IETF Trust Legal Provisions 가 수정 없는 전문 배포를 허용하므로 `10-ietf-rfc/` 에 원문 그대로 넣어 두었다.
 
 - 대상: 3GPP 81건 (`_tools/specs.json`) + ITU-T 2건 + IETF RFC 107종
-- 아래 표의 버전: 2026-10-08 에 로컬에 받아 둔 판 기준 (81/81건). 다시 받으면 더 새 판이 나올 수 있다.
+- 아래 표의 버전: 2026-10-12 에 로컬에 받아 둔 판 기준 (81/81건). 다시 받으면 더 새 판이 나올 수 있다.
 - 출처: <https://www.3gpp.org/ftp/Specs/archive/> · <https://www.itu.int/rec/>
 
 ## 사용법
 
-Python 3 표준 라이브러리만 쓴다. 저장소 루트에서 돌린다.
+Python 3 표준 라이브러리만 쓴다. 저장소 루트에서 돌린다. 구형 .doc 본문을 변환할 때만 LibreOffice 나 Word(Windows) 가 있으면 쓴다 (아래 제약 참조).
 
 ```
 python _tools/fetch_3gpp.py --dry-run   # 받을 버전 미리보기
@@ -21,9 +21,11 @@ python _tools/gen_readme.py             # 이 README 재생성
 
 규격번호를 인자로 주면 그것만 처리한다 (`python _tools/convert_md.py 24.380`). `convert_md.py --force` 는 이미 변환한 것도 다시 만든다. 대상 규격을 늘리거나 옮길 때는 `_tools/specs.json` 만 고친다 - 받기 · 변환 · README 가 모두 이 목록을 읽는다. 최신 zip 에 동봉 파일이 빠진 판은 그 항목에 `"attach_from": "k00"` 처럼 동봉 파일을 가져올 판을 적는다 (폴더에 동봉 파일이 없을 때만 그 판 zip 을 받는다).
 
+클론한 뒤 `git config core.hooksPath _tools/hooks` 를 한 번 실행한다. `.gitignore` 가 제외하는 파일(원문 · 변환본)이 `git add -f` 로 스테이징되면 pre-commit 훅이 커밋을 거부한다.
+
 ## 폴더 구조
 
-저장소에는 `10-ietf-rfc/` 와 `_tools/` 만 들어 있다. 나머지는 스크립트가 원문을 받아 채우는 자리이며 `.gitignore` 로 제외한다.
+저장소에는 `10-ietf-rfc/` 와 `_tools/` 만 들어 있다. 나머지는 스크립트가 원문을 받아 채우는 자리다. `.gitignore` 는 허용 목록 방식이라 `specs.json` 에 새 서비스 폴더가 생겨도 추적되지 않는다.
 
 ```
 00-common        MCS 공통 (요구사항 · 아키텍처 · CSC 인터페이스)
@@ -50,7 +52,7 @@ _tools           수집 · 변환 · 생성 스크립트 (저장소에 포함)
 
 `convert_md.py` 는 docx 의 XML 을 직접 읽어 3GPP 스타일 이름(Heading · B1 ~ B5 · PL · NO · TH · TOC 등)으로 구조를 구분한다. 외부 변환기를 쓰지 않는 대신 다음 제약이 있다.
 
-- **.doc 본문은 변환하지 않고 원문 그대로 둔다.** 구형 Word 바이너리(OLE)라 표준 라이브러리로 읽을 수 없다. 지금 5건이다: 24.229 · 26.989 · 29.380 · 33.879 · 36.579-3. 필요하면 Word 로 docx 로 저장한 뒤 `convert_md.py` 를 돌린다.
+- **.doc 본문은 LibreOffice 나 Word 가 있을 때만 변환된다.** 구형 Word 바이너리(OLE)라 표준 라이브러리로 읽을 수 없어, `convert_md.py` 가 `soffice` 를 찾으면 그것으로, 없으면 Windows 의 Word 로 임시 docx 를 만들어 변환한다. 둘 다 없으면 원문 그대로 둔다. 지금 변환되지 않은 것은 0건이다.
 - **본문이 장별 파일로 나뉜 규격은 표지 docx 만 변환된다.** 26.445 가 해당하며, 나머지 조각(대부분 .doc)은 원문 그대로 남는다.
 - **그림은 원래 형식 그대로 `media/` 에 빼낸다.** 3GPP 그림은 대부분 EMF · WMF 라 Markdown 뷰어에 보이지 않는다. 링크만 남으므로 그림이 필요하면 원문을 연다.
 - **표의 병합 셀은 펼친다.** Markdown 표에 병합이 없어 가로 병합은 빈 칸으로, 세로 병합은 첫 행에만 내용을 둔다. 한 칸짜리 표(코드 · 그림 상자)는 표로 만들지 않고 내용을 본문으로 푼다.
@@ -83,7 +85,7 @@ Push To Talk. Stage 1 · 2 · 3 과 미디어 플레인·코덱이 모두 있다
 | [24379-k10.zip](https://www.3gpp.org/ftp/Specs/archive/24_series/24.379/24379-k10.zip) | TS 24.379 | Mission Critical Push To Talk (MCPTT) call control; Protocol specification | v20.1.0 (Rel-20, 2026-09) |  |
 | [24380-k10.zip](https://www.3gpp.org/ftp/Specs/archive/24_series/24.380/24380-k10.zip) | TS 24.380 | Mission Critical Push To Talk (MCPTT) media plane control; Protocol specification | v20.1.0 (Rel-20, 2026-09) |  |
 | [26179-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.179/26179-j00.zip) | TS 26.179 | Mission Critical Push To Talk (MCPTT); Codecs and media handling | v19.0.0 (Rel-19, 2025-10) |  |
-| [26989-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.989/26989-j00.zip) | TR 26.989 | Mission Critical Push To Talk (MCPTT); Media, codecs and Multimedia Broadcast/Multicast Service (MBMS) enhancements for MCPTT over LTE | v19.0.0 (Rel-19, 2025-10) | 코덱 선정 근거 TR / **.doc 원문 그대로 (md 변환 안 함)** |
+| [26989-j00.zip](https://www.3gpp.org/ftp/Specs/archive/26_series/26.989/26989-j00.zip) | TR 26.989 | Mission Critical Push To Talk (MCPTT); Media, codecs and Multimedia Broadcast/Multicast Service (MBMS) enhancements for MCPTT over LTE | v19.0.0 (Rel-19, 2025-10) | 코덱 선정 근거 TR / .doc 원문 (임시 docx 로 바꿔 md 변환) |
 
 ## MCVideo
 
@@ -126,7 +128,7 @@ KMS · MIKEY-SAKKE · GMK/PCK/CSK/SPK/MuSiK · SRTP 키 유도.
 | --- | --- | --- | --- | --- |
 | [33180-k10.zip](https://www.3gpp.org/ftp/Specs/archive/33_series/33.180/33180-k10.zip) | TS 33.180 | Security of the Mission Critical (MC) service | v20.1.0 (Rel-20, 2026-09) |  |
 | [33220-j10.zip](https://www.3gpp.org/ftp/Specs/archive/33_series/33.220/33220-j10.zip) | TS 33.220 | Generic Authentication Architecture (GAA); Generic Bootstrapping Architecture (GBA) | v19.1.0 (Rel-19, 2026-01) |  |
-| [33879-d10.zip](https://www.3gpp.org/ftp/Specs/archive/33_series/33.879/33879-d10.zip) | TR 33.879 | Study on security enhancements for Mission Critical Push To Talk (MCPTT) over LTE | v13.1.0 (Rel-13, 2016-06) | Rel-13 설계 배경 TR / **.doc 원문 그대로 (md 변환 안 함)** |
+| [33879-d10.zip](https://www.3gpp.org/ftp/Specs/archive/33_series/33.879/33879-d10.zip) | TR 33.879 | Study on security enhancements for Mission Critical Push To Talk (MCPTT) over LTE | v13.1.0 (Rel-13, 2016-06) | Rel-13 설계 배경 TR / .doc 원문 (임시 docx 로 바꿔 md 변환) |
 
 ## SIP · IMS 기반
 
@@ -135,7 +137,7 @@ KMS · MIKEY-SAKKE · GMK/PCK/CSK/SPK/MuSiK · SRTP 키 유도.
 | 원문 (zip) | 표준 | 공식 명칭 | 버전 | 비고 |
 | --- | --- | --- | --- | --- |
 | [23203-k10.zip](https://www.3gpp.org/ftp/Specs/archive/23_series/23.203/23203-k10.zip) | TS 23.203 | Policy and charging control architecture | v20.1.0 (Rel-20, 2026-09) | 2026-09-28 추가 · 표 6.1.7-A QCI 특성표 (QCI 65 · 67 · 69 · 70) |
-| [24229-k10.zip](https://www.3gpp.org/ftp/Specs/archive/24_series/24.229/24229-k10.zip) | TS 24.229 | IP multimedia call control protocol based on Session Initiation Protocol (SIP) and Session Description Protocol (SDP) | v20.1.0 (Rel-20, 2026-09) | **.doc 원문 그대로 (md 변환 안 함)** |
+| [24229-k10.zip](https://www.3gpp.org/ftp/Specs/archive/24_series/24.229/24229-k10.zip) | TS 24.229 | IP multimedia call control protocol based on Session Initiation Protocol (SIP) and Session Description Protocol (SDP) | v20.1.0 (Rel-20, 2026-09) | .doc 원문 (임시 docx 로 바꿔 md 변환) |
 | [29213-j30.zip](https://www.3gpp.org/ftp/Specs/archive/29_series/29.213/29213-j30.zip) | TS 29.213 | Policy and Charging Control signalling flows and Quality of Service (QoS) parameter mapping | v19.3.0 (Rel-19, 2025-12) | 2026-09-28 추가 · 표 6.2.1 · 6.3.1 SDP b=AS → MBR 유도, GBR 은 운영자 설정 |
 | [31102-k00.zip](https://www.3gpp.org/ftp/Specs/archive/31_series/31.102/31102-k00.zip) | TS 31.102 | Characteristics of the Universal Subscriber Identity Module (USIM) application | v20.0.0 (Rel-20, 2026-09) |  |
 | [31103-j10.zip](https://www.3gpp.org/ftp/Specs/archive/31_series/31.103/31103-j10.zip) | TS 31.103 | Characteristics of the IP Multimedia Services Identity Module (ISIM) application | v19.1.0 (Rel-19, 2026-09) |  |
@@ -190,7 +192,7 @@ MCX 코덱 규격이 참조하는 미디어 핸들링과 코덱 본체.
 | --- | --- | --- | --- | --- |
 | [23283-k10.zip](https://www.3gpp.org/ftp/Specs/archive/23_series/23.283/23283-k10.zip) | TS 23.283 | Mission Critical Communication Interworking with Land Mobile Radio Systems; Stage 2 | v20.1.0 (Rel-20, 2026-01) |  |
 | [29379-k00.zip](https://www.3gpp.org/ftp/Specs/archive/29_series/29.379/29379-k00.zip) | TS 29.379 | Mission Critical Push To Talk (MCPTT) call control interworking with Land Mobile Radio (LMR) systems; Stage-3 | v20.0.0 (Rel-20, 2026-09) |  |
-| [29380-j00.zip](https://www.3gpp.org/ftp/Specs/archive/29_series/29.380/29380-j00.zip) | TS 29.380 | Mission Critical Push To Talk (MCPTT) media plane control interworking with Land Mobile Radio (LMR) systems | v19.0.0 (Rel-19, 2025-10) | **.doc 원문 그대로 (md 변환 안 함)** |
+| [29380-j00.zip](https://www.3gpp.org/ftp/Specs/archive/29_series/29.380/29380-j00.zip) | TS 29.380 | Mission Critical Push To Talk (MCPTT) media plane control interworking with Land Mobile Radio (LMR) systems | v19.0.0 (Rel-19, 2025-10) | .doc 원문 (임시 docx 로 바꿔 md 변환) |
 | [29582-j00.zip](https://www.3gpp.org/ftp/Specs/archive/29_series/29.582/29582-j00.zip) | TS 29.582 | Mission Critical Data (MCData) interworking with Land Mobile Radio (LMR) systems; Stage 3 | v19.0.0 (Rel-19, 2025-10) |  |
 
 ## 적합성 시험
@@ -201,7 +203,7 @@ MCX 코덱 규격이 참조하는 미디어 핸들링과 코덱 본체.
 | --- | --- | --- | --- | --- |
 | [36579-1-g80.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-1/36579-1-g80.zip) | TS 36.579-1 | Mission Critical (MC) services over LTE; Part 1: Common test environment | v16.8.0 (Rel-16, 2025-03) |  |
 | [36579-2-g80.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-2/36579-2-g80.zip) | TS 36.579-2 | Mission Critical (MC) services over LTE; Part 2: Mission Critical Push To Talk (MCPTT) User Equipment (UE) Protocol conformance specification | v16.8.0 (Rel-16, 2025-03) |  |
-| [36579-3-f00.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-3/36579-3-f00.zip) | TS 36.579-3 | Mission Critical (MC) services over LTE; Part 3: Mission Critical Push To Talk (MCPTT) Server Application conformance specification | v15.0.0 (Rel-15, 2024-03) | **.doc 원문 그대로 (md 변환 안 함)** |
+| [36579-3-f00.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-3/36579-3-f00.zip) | TS 36.579-3 | Mission Critical (MC) services over LTE; Part 3: Mission Critical Push To Talk (MCPTT) Server Application conformance specification | v15.0.0 (Rel-15, 2024-03) | .doc 원문 (임시 docx 로 바꿔 md 변환) |
 | [36579-4-g80.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-4/36579-4-g80.zip) | TS 36.579-4 | Mission Critical (MC) services over LTE; Part 4: Test Applicability and Implementation Conformance Statement (ICS) proforma specification | v16.8.0 (Rel-16, 2025-03) |  |
 | [36579-5-i30.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-5/36579-5-i30.zip) | TS 36.579-5 | Mission Critical (MC) services over LTE; Part 5: Abstract test suite (ATS) | v18.3.0 (Rel-18, 2025-06) |  |
 | [36579-6-g60.zip](https://www.3gpp.org/ftp/Specs/archive/36_series/36.579-6/36579-6-g60.zip) | TS 36.579-6 | Mission Critical (MC) services over LTE; Part 6: Mission Critical Video (MCVideo) User Equipment (UE) Protocol conformance specification | v16.6.0 (Rel-16, 2025-03) |  |

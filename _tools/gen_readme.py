@@ -58,7 +58,8 @@ def collect():
     for e in load_specs():
         d = spec_dir(e)
         doc, code = main_doc(d, e["spec"])
-        r = {"e": e, "doc": doc, "code": code, "meta": None, "parts": []}
+        r = {"e": e, "doc": doc, "code": code, "meta": None, "parts": [],
+             "md": bool(doc) and (d / f"{doc.stem}.md").exists()}
         if doc:
             r["meta"] = cover(doc)
             r["extras"], r["parts"] = extras(d, doc)
@@ -80,7 +81,8 @@ def table(rows):
         if m["ver"] == "0.0.1":
             notes.append("본문 없음 - 착수만 된 판")
         if r["doc"].suffix.lower() == ".doc":
-            notes.append("**.doc 원문 그대로 (md 변환 안 함)**")
+            notes.append(".doc 원문 (임시 docx 로 바꿔 md 변환)" if r["md"]
+                         else "**.doc 원문 그대로 (md 변환 안 함)**")
         if r["parts"]:
             notes.append(f"**본문이 장별 조각으로 나뉨 - 조각 {len(r['parts'])}건은 md 변환 안 함**")
         notes.append(r["extras"])
@@ -97,7 +99,8 @@ def main():
     for r in rows:
         by_sec.setdefault(r["e"]["dir"], []).append(r)
     got = [r for r in rows if r["doc"]]
-    docs = sorted(r["e"]["spec"] for r in got if r["doc"].suffix.lower() == ".doc")
+    docs = sorted(r["e"]["spec"] for r in got
+                  if r["doc"].suffix.lower() == ".doc" and not r["md"])
     parts = sorted(r["e"]["spec"] for r in got if r["parts"])
     today = datetime.date.today().isoformat()
 
@@ -117,7 +120,8 @@ def main():
     L.append("- 출처: <https://www.3gpp.org/ftp/Specs/archive/> · <https://www.itu.int/rec/>\n")
 
     L.append("## 사용법\n")
-    L.append("Python 3 표준 라이브러리만 쓴다. 저장소 루트에서 돌린다.\n")
+    L.append("Python 3 표준 라이브러리만 쓴다. 저장소 루트에서 돌린다. 구형 .doc 본문을 "
+             "변환할 때만 LibreOffice 나 Word(Windows) 가 있으면 쓴다 (아래 제약 참조).\n")
     L.append("```")
     L.append("python _tools/fetch_3gpp.py --dry-run   # 받을 버전 미리보기")
     L.append("python _tools/fetch_3gpp.py             # 최신 zip 을 받아 서비스 폴더에 풀기 (zip 은 남기지 않음)")
@@ -129,10 +133,14 @@ def main():
              "옮길 때는 `_tools/specs.json` 만 고친다 - 받기 · 변환 · README 가 모두 이 목록을 읽는다. "
              "최신 zip 에 동봉 파일이 빠진 판은 그 항목에 `\"attach_from\": \"k00\"` 처럼 "
              "동봉 파일을 가져올 판을 적는다 (폴더에 동봉 파일이 없을 때만 그 판 zip 을 받는다).\n")
+    L.append("클론한 뒤 `git config core.hooksPath _tools/hooks` 를 한 번 실행한다. "
+             "`.gitignore` 가 제외하는 파일(원문 · 변환본)이 `git add -f` 로 스테이징되면 "
+             "pre-commit 훅이 커밋을 거부한다.\n")
 
     L.append("## 폴더 구조\n")
     L.append("저장소에는 `10-ietf-rfc/` 와 `_tools/` 만 들어 있다. 나머지는 스크립트가 원문을 "
-             "받아 채우는 자리이며 `.gitignore` 로 제외한다.\n")
+             "받아 채우는 자리다. `.gitignore` 는 허용 목록 방식이라 `specs.json` 에 새 서비스 "
+             "폴더가 생겨도 추적되지 않는다.\n")
     L.append("```")
     L.append("00-common        MCS 공통 (요구사항 · 아키텍처 · CSC 인터페이스)")
     L.append("01-mcptt         MCPTT")
@@ -159,10 +167,11 @@ def main():
     L.append("## Markdown 변환의 제약\n")
     L.append("`convert_md.py` 는 docx 의 XML 을 직접 읽어 3GPP 스타일 이름(Heading · B1 ~ B5 · PL · "
              "NO · TH · TOC 등)으로 구조를 구분한다. 외부 변환기를 쓰지 않는 대신 다음 제약이 있다.\n")
-    L.append(f"- **.doc 본문은 변환하지 않고 원문 그대로 둔다.** 구형 Word 바이너리(OLE)라 표준 "
-             f"라이브러리로 읽을 수 없다. 지금 {len(docs)}건이다: "
-             + (" · ".join(docs) if docs else "없음") + ". 필요하면 Word 로 docx 로 저장한 뒤 "
-             "`convert_md.py` 를 돌린다.")
+    L.append("- **.doc 본문은 LibreOffice 나 Word 가 있을 때만 변환된다.** 구형 Word 바이너리(OLE)라 "
+             "표준 라이브러리로 읽을 수 없어, `convert_md.py` 가 `soffice` 를 찾으면 그것으로, "
+             "없으면 Windows 의 Word 로 임시 docx 를 만들어 변환한다. 둘 다 없으면 원문 그대로 "
+             f"둔다. 지금 변환되지 않은 것은 {len(docs)}건이다"
+             + (": " + " · ".join(docs) if docs else "") + ".")
     if parts:
         L.append(f"- **본문이 장별 파일로 나뉜 규격은 표지 docx 만 변환된다.** {' · '.join(parts)} "
                  "가 해당하며, 나머지 조각(대부분 .doc)은 원문 그대로 남는다.")

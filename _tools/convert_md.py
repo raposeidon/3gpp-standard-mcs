@@ -1,8 +1,9 @@
 """받아 둔 3GPP 본문(docx)을 Markdown 으로 바꾼다.
 
 사용: python convert_md.py [규격번호 ...] [--force]
-본문 옆에 <본문 이름>.md 와 media/ 를 만든다. 본문이 .doc(구형 바이너리)인
-규격은 표준 라이브러리로 읽을 수 없어 변환하지 않고 원문 그대로 둔다.
+본문 옆에 <본문 이름>.md 와 media/ 를 만든다. 본문이 .doc(구형 바이너리)이면
+표준 라이브러리로 읽을 수 없어, LibreOffice(soffice) 나 Word(Windows) 가 있을 때만
+임시 docx 로 바꿔 변환한다. 둘 다 없으면 원문 그대로 둔다.
 
 3GPP 문서는 스타일이 정형화돼 있어 스타일 이름만으로 구조를 구분한다.
   Heading 1~9 / H6   제목 (Heading 8 · 9 는 Annex 제목이라 1단계로 올린다)
@@ -12,11 +13,16 @@
   TH · TF            표 · 그림 제목
   TOC1~9             목차 (버린다 - 쪽 번호만 남는다)
 """
+import os
 import posixpath
 import re
+import shutil
+import subprocess
 import sys
+import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+from pathlib import Path
 
 from common import load_specs, main_doc, spec_dir, cover, zip_url
 
@@ -342,21 +348,80 @@ def yaml_str(s):
     return '"' + (s or "").replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def convert_one(e, force):
+# ---- .doc -> docx (선택 단계) ---------------------------------------------
+# 변환기는 외부 프로그램이라 있을 때만 쓴다. LibreOffice 를 먼저 찾고, 없으면
+# Windows 의 Word 를 PowerShell COM 으로 부른다 (pywin32 를 쓰지 않으려고).
+
+SOFFICE_PATHS = [r"C:\Program Files\LibreOffice\program\soffice.exe",
+                 "/Applications/LibreOffice.app/Contents/MacOS/soffice"]
+
+# 경로는 환경변수로 넘긴다 - 명령 문자열에 끼우면 따옴표 · 대괄호 경로가 깨진다
+WORD_PS = (
+    "$ErrorActionPreference='Stop';"
+    "$w=New-Object -ComObject Word.Application;$w.Visible=$false;$w.DisplayAlerts=0;"
+    "try{$d=$w.Documents.Open($env:SRC_DOC,$false,$true,$false);"
+    "$d.SaveAs2($env:DST_DOCX,16);$d.Close($false)}finally{$w.Quit()}"
+)
+
+
+def find_soffice():
+    found = shutil.which("soffice") or shutil.which("soffice.exe")
+    return found or next((p for p in SOFFICE_PATHS if Path(p).is_file()), None)
+
+
+def has_word():
+    if os.name != "nt":
+        return False
+    import winreg
+    try:
+        winreg.CloseKey(winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Word.Application\CLSID"))
+        return True
+    except OSError:
+        return False
+
+
+def doc_converter():
+    """(이름, 함수) 또는 None. 함수는 (doc 경로, 출력 폴더) -> 만든 docx 경로."""
+    so = find_soffice()
+    if so:
+        def run(doc, out):
+            subprocess.run([so, "--headless", "--convert-to", "docx", "--outdir", str(out),
+                            str(doc)], check=True, capture_output=True, timeout=1800)
+            return out / f"{doc.stem}.docx"
+        return "LibreOffice", run
+    if has_word():
+        def run(doc, out):
+            dst = out / f"{doc.stem}.docx"
+            env = dict(os.environ, SRC_DOC=str(doc.resolve()), DST_DOCX=str(dst))
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", WORD_PS],
+                           check=True, capture_output=True, timeout=1800, env=env)
+            return dst
+        return "Word", run
+    return None
+
+
+def convert_one(e, force, doc_conv):
     d = spec_dir(e)
     doc, code = main_doc(d, e["spec"])
     if doc is None:
         return "MISSING", "본문 없음 (fetch 먼저)"
-    if doc.suffix.lower() == ".doc":
-        return "DOC", doc.name
+    is_doc = doc.suffix.lower() == ".doc"
+    if is_doc and doc_conv is None:
+        return "DOC", f"{doc.name} (LibreOffice · Word 없음)"
     md = d / f"{doc.stem}.md"
     if md.exists() and not force and md.stat().st_mtime >= doc.stat().st_mtime:
         return "SKIP", md.name
     c = cover(doc)
     _, url = zip_url(e["spec"], code)
-    with zipfile.ZipFile(doc) as z:
-        conv = Converter(z, d)
-        body = conv.convert()
+    # Word 가 종료 직후 잠시 파일을 잡고 있어 임시 폴더 정리 실패는 무시한다
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+        src = doc_conv[1](doc, Path(tmp)) if is_doc else doc
+        if not src.is_file():
+            # soffice 는 같은 사용자 인스턴스가 떠 있으면 아무것도 만들지 않고 0 으로 끝난다
+            raise RuntimeError(f"{doc_conv[0]} 가 docx 를 만들지 않았다")
+        with zipfile.ZipFile(src) as z:
+            conv = Converter(z, d)
+            body = conv.convert()
     kind = (c["kind"] or e["kind"]).upper()
     head = ["---",
             f"spec: {yaml_str(kind + ' ' + e['spec'])}",
@@ -368,17 +433,20 @@ def convert_one(e, force):
             f"converted_from: {yaml_str(doc.name)}",
             "---", ""]
     md.write_text("\n".join(head) + body, encoding="utf-8", newline="\n")
-    return "MD", f"{md.name} ({md.stat().st_size / 1e6:.1f} MB, 그림 {len(conv.media)})"
+    via = f", {doc_conv[0]} 로 docx 변환" if is_doc else ""
+    return "MD", f"{md.name} ({md.stat().st_size / 1e6:.1f} MB, 그림 {len(conv.media)}{via})"
 
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     force = "--force" in sys.argv
     specs = [e for e in load_specs() if not args or e["spec"] in args]
+    doc_conv = doc_converter()
+    print(f".doc 변환기: {doc_conv[0] if doc_conv else '없음 (.doc 본문은 건너뜀)'}")
     res = []
     for e in specs:
         try:
-            st, msg = convert_one(e, force)
+            st, msg = convert_one(e, force, doc_conv)
         except Exception as exc:  # noqa: BLE001
             st, msg = "FAIL", f"{type(exc).__name__}: {str(exc)[:100]}"
         res.append((e["spec"], st, msg))
