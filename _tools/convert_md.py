@@ -1,9 +1,14 @@
 """받아 둔 3GPP 본문(docx)을 Markdown 으로 바꾼다.
 
-사용: python convert_md.py [규격번호 ...] [--force]
+사용: python convert_md.py [규격번호 ...] [--force] [--no-png]
 본문 옆에 <본문 이름>.md 와 media/ 를 만든다. 본문이 .doc(구형 바이너리)이면
 표준 라이브러리로 읽을 수 없어, LibreOffice(soffice) 나 Word(Windows) 가 있을 때만
 임시 docx 로 바꿔 변환한다. 둘 다 없으면 원문 그대로 둔다.
+
+그림 중 EMF · WMF 는 Markdown 뷰어가 못 그리므로 PNG 를 함께 만들어 md 가 PNG 를
+가리키게 한다. Windows 는 GDI+(PowerShell System.Drawing)로, 그 밖에는 Inkscape 가
+있으면 그것으로 그린다. 둘 다 없거나 그리기에 실패한 그림은 원래 파일을 가리킨다.
+--no-png 를 주면 이 단계를 건너뛴다.
 
 3GPP 문서는 스타일이 정형화돼 있어 스타일 이름만으로 구조를 구분한다.
   Heading 1~9 / H6   제목 (Heading 8 · 9 는 Annex 제목이라 1단계로 올린다)
@@ -13,6 +18,7 @@
   TH · TF            표 · 그림 제목
   TOC1~9             목차 (버린다 - 쪽 번호만 남는다)
 """
+import base64
 import os
 import posixpath
 import re
@@ -94,6 +100,9 @@ class Converter:
         self.z = z
         self.out_dir = out_dir
         self.media = {}
+        self.metafiles = []     # (원본 이름, PNG 이름) - EMF · WMF 만
+        self.names = {posixpath.basename(n) for n in z.namelist()
+                      if n.startswith("word/media/")}
         self.fields = []        # 열린 필드마다 "code" / "result"
         self.styles = self._styles()
         self.rels = self._rels()
@@ -133,7 +142,14 @@ class Converter:
             d = self.out_dir / "media"
             d.mkdir(exist_ok=True)
             (d / name).write_bytes(data)
-            self.media[target] = name
+            link = name
+            stem, ext = posixpath.splitext(name)
+            if ext.lower() in METAFILE_EXT:
+                # 같은 번호의 PNG 가 이미 들어 있으면 image5.emf.png 처럼 원래 확장자를 남긴다
+                png = stem + ".png" if stem + ".png" not in self.names else name + ".png"
+                self.metafiles.append((name, png))
+                link = png
+            self.media[target] = link
         return f"![](media/{self.media[target]})"
 
     # ---- 인라인 ---------------------------------------------------------
@@ -344,6 +360,130 @@ class Converter:
         return "\n\n".join(out) + "\n"
 
 
+# ---- EMF · WMF -> PNG (선택 단계) ------------------------------------------
+# 그리는 쪽도 외부 프로그램이라 있을 때만 쓴다. Windows 는 GDI+ 가 늘 있으므로
+# PowerShell 의 System.Drawing 으로 그리고, 그 밖에는 Inkscape 를 찾는다.
+
+METAFILE_EXT = (".emf", ".wmf")
+FIG_DPI = 200       # 그림 해상도. 3GPP 그림은 대개 A4 본문 폭 이하라 200 이면 글자가 읽힌다
+FIG_MAX_PX = 4000   # 한 변 상한 - 쪽 전체 크기로 잘못 잡힌 메타파일이 거대한 PNG 가 되지 않게
+INKSCAPE_PATHS = [r"C:\Program Files\Inkscape\bin\inkscape.exe",
+                  "/Applications/Inkscape.app/Contents/MacOS/inkscape"]
+
+# 목록 파일 한 줄이 "원본<TAB>PNG" 다. 경로는 환경변수와 UTF-8 파일로 넘긴다.
+# 메타파일 머리의 경계(Bounds)를 그 해상도(Dpi)로 나누면 인치가 나와 EMF · WMF 모두 같은 식이다.
+GDIPLUS_PS = r"""
+$ErrorActionPreference='Stop'
+Add-Type -AssemblyName System.Drawing
+$dpi=[double]$env:FIG_DPI; $max=[double]$env:FIG_MAX_PX; $i=0
+foreach($line in [IO.File]::ReadAllLines($env:FIG_LIST,[Text.Encoding]::UTF8)){
+  $src,$dst=$line -split "`t",2
+  try{
+    $mf=New-Object System.Drawing.Imaging.Metafile($src)
+    try{
+      $h=$mf.GetMetafileHeader()
+      $w=$h.Bounds.Width/$h.DpiX*$dpi; $ht=$h.Bounds.Height/$h.DpiY*$dpi
+      $k=[Math]::Min(1.0,$max/[Math]::Max($w,$ht))
+      $w=[Math]::Max(1,[int][Math]::Ceiling($w*$k)); $ht=[Math]::Max(1,[int][Math]::Ceiling($ht*$k))
+      $bmp=New-Object System.Drawing.Bitmap($w,$ht)
+      try{
+        $bmp.SetResolution($dpi,$dpi)
+        $g=[System.Drawing.Graphics]::FromImage($bmp)
+        try{
+          $g.Clear([System.Drawing.Color]::White)
+          $g.SmoothingMode='AntiAlias'; $g.InterpolationMode='HighQualityBicubic'
+          $g.TextRenderingHint='AntiAliasGridFit'
+          $g.DrawImage($mf,0,0,$w,$ht)
+        }finally{$g.Dispose()}
+        $bmp.Save($dst,[System.Drawing.Imaging.ImageFormat]::Png)
+      }finally{$bmp.Dispose()}
+    }finally{$mf.Dispose()}
+  }catch{ [Console]::Out.WriteLine("FAIL`t$i`t$($_.Exception.Message)") }
+  $i++
+}
+"""
+
+
+def find_inkscape():
+    found = shutil.which("inkscape") or shutil.which("inkscape.exe")
+    return found or next((p for p in INKSCAPE_PATHS if Path(p).is_file()), None)
+
+
+def metafile_renderer():
+    """(이름, 함수) 또는 None. 함수는 [(원본, PNG)] -> {실패한 번호: 사유}."""
+    if os.name == "nt" and shutil.which("powershell"):
+        def run(pairs):
+            with tempfile.TemporaryDirectory() as tmp:
+                lst = Path(tmp) / "list.txt"
+                lst.write_text("\n".join(f"{s.resolve()}\t{d.resolve()}" for s, d in pairs),
+                               encoding="utf-8")
+                env = dict(os.environ, FIG_LIST=str(lst), FIG_DPI=str(FIG_DPI),
+                           FIG_MAX_PX=str(FIG_MAX_PX))
+                # 여러 줄 · 따옴표가 든 스크립트라 명령줄 인용에 기대지 않고 -EncodedCommand 로 넘긴다
+                enc = base64.b64encode(GDIPLUS_PS.encode("utf-16-le")).decode("ascii")
+                r = subprocess.run(["powershell", "-NoProfile", "-NonInteractive",
+                                    "-EncodedCommand", enc], env=env, capture_output=True,
+                                   timeout=CONVERT_TIMEOUT, check=False)
+            out = r.stdout.decode("oem", "replace")
+            fails = {}
+            for ln in out.splitlines():
+                parts = ln.split("\t", 2)
+                if len(parts) == 3 and parts[0] == "FAIL" and parts[1].isdigit():
+                    fails[int(parts[1])] = parts[2].strip()
+            if r.returncode != 0 and not fails:
+                err = r.stderr.decode("oem", "replace").strip().splitlines()
+                raise RuntimeError(f"GDI+ 실패 (종료 코드 {r.returncode}): {err[0] if err else ''}")
+            return fails
+        return "GDI+", run
+    ink = find_inkscape()
+    if ink:
+        def run(pairs):
+            # Inkscape 는 여러 파일을 한 번에 받으면 원본 옆에 같은 이름의 PNG 를 쓴다.
+            # 이미 있는 PNG 를 덮지 않도록 번호 이름으로 임시 폴더에 복사해 그린다.
+            with tempfile.TemporaryDirectory() as tmp:
+                srcs = []
+                for i, (s, _) in enumerate(pairs):
+                    c = Path(tmp) / f"{i}{s.suffix.lower()}"
+                    shutil.copyfile(s, c)
+                    srcs.append(c)
+                for k in range(0, len(srcs), 100):   # 명령줄 길이 제한
+                    run_tool("Inkscape", [ink, "--export-type=png", "--export-area-drawing",
+                                          f"--export-dpi={FIG_DPI}", "--export-background=white",
+                                          "--export-background-opacity=1",
+                                          *map(str, srcs[k:k + 100])])
+                fails = {}
+                for i, (c, (_, d)) in enumerate(zip(srcs, pairs)):
+                    png = c.with_suffix(".png")
+                    if png.is_file():
+                        shutil.move(str(png), str(d))
+                    else:
+                        fails[i] = "PNG 를 만들지 않았다"
+                return fails
+        return "Inkscape", run
+    return None
+
+
+def render_metafiles(conv, out_dir, renderer):
+    """EMF · WMF 를 PNG 로 그린다. (그린 수, 실패 [(원본, PNG, 사유)])."""
+    if not conv.metafiles:
+        return 0, []
+    if renderer is None:
+        return 0, [(n, p, "변환기 없음") for n, p in conv.metafiles]
+    d = out_dir / "media"
+    pairs = [(d / n, d / p) for n, p in conv.metafiles]
+    for _, dst in pairs:
+        dst.unlink(missing_ok=True)     # 지난번 PNG 가 남아 성공으로 오인되지 않게
+    try:
+        fails = renderer[1](pairs)
+    except (RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
+        return 0, [(n, p, str(exc)[:200]) for n, p in conv.metafiles]
+    bad = []
+    for i, ((n, p), (_, dst)) in enumerate(zip(conv.metafiles, pairs)):
+        if i in fails or not dst.is_file():
+            bad.append((n, p, fails.get(i, "PNG 없음")))
+    return len(pairs) - len(bad), bad
+
+
 def yaml_str(s):
     return '"' + (s or "").replace("\\", "\\\\").replace('"', '\\"') + '"'
 
@@ -435,7 +575,7 @@ def doc_converter():
     return None
 
 
-def convert_one(e, force, doc_conv):
+def convert_one(e, force, doc_conv, fig_conv=None):
     d = spec_dir(e)
     doc, code = main_doc(d, e["spec"])
     if doc is None:
@@ -457,6 +597,13 @@ def convert_one(e, force, doc_conv):
         with zipfile.ZipFile(src) as z:
             conv = Converter(z, d)
             body = conv.convert()
+    if fig_conv is False:   # --no-png
+        n_png, bad = 0, [(n, p, "건너뜀") for n, p in conv.metafiles]
+    else:
+        n_png, bad = render_metafiles(conv, d, fig_conv)
+    # 그리지 못한 그림은 링크를 원래 파일로 되돌린다
+    for n, p, _ in bad:
+        body = body.replace(f"](media/{p})", f"](media/{n})")
     kind = (c["kind"] or e["kind"]).upper()
     head = ["---",
             f"spec: {yaml_str(kind + ' ' + e['spec'])}",
@@ -469,19 +616,29 @@ def convert_one(e, force, doc_conv):
             "---", ""]
     md.write_text("\n".join(head) + body, encoding="utf-8", newline="\n")
     via = f", {doc_conv[0]} 로 docx 변환" if is_doc else ""
-    return "MD", f"{md.name} ({md.stat().st_size / 1e6:.1f} MB, 그림 {len(conv.media)}{via})"
+    fig = ""
+    if conv.metafiles and fig_conv is not False:
+        fig = f", PNG {n_png}/{len(conv.metafiles)}"
+        if bad and n_png:
+            fig += f" (실패 예: {bad[0][0]} - {bad[0][2][:80]})"
+    return "MD", (f"{md.name} ({md.stat().st_size / 1e6:.1f} MB, 그림 {len(conv.media)}"
+                  f"{fig}{via})")
 
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     force = "--force" in sys.argv
+    no_png = "--no-png" in sys.argv
     specs = [e for e in load_specs() if not args or e["spec"] in args]
     doc_conv = doc_converter()
     print(f".doc 변환기: {doc_conv[0] if doc_conv else '없음 (.doc 본문은 건너뜀)'}")
+    fig_conv = False if no_png else metafile_renderer()
+    print("EMF · WMF -> PNG: " + ("건너뜀 (--no-png)" if fig_conv is False else
+                                 fig_conv[0] if fig_conv else "변환기 없음 (원본 링크 유지)"))
     res = []
     for e in specs:
         try:
-            st, msg = convert_one(e, force, doc_conv)
+            st, msg = convert_one(e, force, doc_conv, fig_conv)
         except Exception as exc:  # noqa: BLE001
             st, msg = "FAIL", f"{type(exc).__name__}: {str(exc)[:300]}"
         res.append((e["spec"], st, msg))

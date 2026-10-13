@@ -141,7 +141,8 @@ def main():
     L.append("python _tools/gen_readme.py             # 이 README 재생성")
     L.append("```\n")
     L.append("규격번호를 인자로 주면 그것만 처리한다 (`python _tools/convert_md.py 24.380`). "
-             "`convert_md.py --force` 는 이미 변환한 것도 다시 만든다. 대상 규격을 늘리거나 "
+             "`convert_md.py --force` 는 이미 변환한 것도 다시 만든다. 이미 변환한 규격에 PNG 를 "
+             "붙이려면 `--force` 로 한 번 다시 돌린다. 대상 규격을 늘리거나 "
              "옮길 때는 `_tools/specs.json` 만 고친다 - 받기 · 변환 · README 가 모두 이 목록을 읽는다. "
              "최신 zip 에 동봉 파일이 빠진 판은 그 항목에 `\"attach_from\": \"k00\"` 처럼 "
              "동봉 파일을 가져올 판을 적는다 (폴더에 동봉 파일이 없을 때만 그 판 zip 을 받는다).\n")
@@ -187,8 +188,11 @@ def main():
     if parts:
         L.append(f"- **본문이 장별 파일로 나뉜 규격은 표지 docx 만 변환된다.** {' · '.join(parts)} "
                  "가 해당하며, 나머지 조각(대부분 .doc)은 원문 그대로 남는다.")
-    L.append("- **그림은 원래 형식 그대로 `media/` 에 빼낸다.** 3GPP 그림은 대부분 EMF · WMF 라 "
-             "Markdown 뷰어에 보이지 않는다. 링크만 남으므로 그림이 필요하면 원문을 연다.")
+    L.append("- **EMF · WMF 그림은 PNG 를 함께 만든다.** 3GPP 그림은 대부분 EMF · WMF 라 Markdown "
+             "뷰어가 그리지 못한다. `media/` 에 원본을 빼낸 뒤 Windows 는 GDI+ 로, 그 밖에는 "
+             "Inkscape 가 있으면 그것으로 PNG 를 만들어 md 가 PNG 를 가리키게 한다. 둘 다 없거나 "
+             "그리기에 실패한 그림은 원본 링크로 남는다 (`--no-png` 로 이 단계를 끌 수 있다). "
+             "PNG 도 원문에서 나온 것이라 저장소에 올리지 않는다.")
     L.append("- **표의 병합 셀은 펼친다.** Markdown 표에 병합이 없어 가로 병합은 빈 칸으로, 세로 "
              "병합은 첫 행에만 내용을 둔다. 한 칸짜리 표(코드 · 그림 상자)는 표로 만들지 않고 "
              "내용을 본문으로 푼다.")
