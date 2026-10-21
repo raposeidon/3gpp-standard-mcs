@@ -1,4 +1,5 @@
-"""MCX 본체 규격이 인용한 RFC 를 영역별로 내려받고 배치 결과를 rfc_plan.json 에 남긴다.
+"""MCX 본체 규격이 인용한 RFC 와 MCX 클라이언트 구현이 근거로 쓰는 RFC(EXTRA_RFCS)를 영역별로 내려받고
+배치 결과를 rfc_plan.json 에 남긴다. 표준이 아닌 근거 문서(EXTRA_DOCS)도 함께 받는다.
 
 사용: python fetch_rfc.py [--plan]   (--plan 은 영역 배치만 보여 주고 받지 않는다)
 README 는 gen_rfc_readme.py 가 rfc_plan.json 으로 만든다.
@@ -11,6 +12,26 @@ import sys
 from common import HERE, RFC_MCX, ROOT, fetch
 
 DEST = ROOT / "10-ietf-rfc"
+
+# MCX 본체 규격(RFC_MCX)이 직접 인용하지 않지만 MCX 클라이언트 구현이 근거로 쓰는 RFC (2026-10-19).
+# 26 계열(코덱 · SDP) 과 국방 변형이 인용한다. 번호 → 쓰는 곳
+EXTRA_RFCS = {
+    3556: "b=RS · b=RR (24.229 §6.1.1 이 인용)",
+    3890: "b=TIAS (26.114 준용)",
+    4585: "AVPF (26.114 준용)",
+    7587: "Opus 페이로드",
+    7616: "HTTP Digest - SIP Digest 응답 계산, 33.203 Annex N 이 인용",
+    7741: "VP8 페이로드",
+    7798: "H.265 페이로드",
+    8269: "ARIA SRTP - 국방 변형",
+    9628: "VP9 페이로드",
+}
+
+# IETF 가 아닌 근거 문서. (저장 경로, URL, 쓰는 곳). OpenID Foundation 사양은 구현 목적의 복제 · 배포를 허락한다
+EXTRA_DOCS = [
+    ("11-openid/openid-connect-core-1_0.txt", "https://openid.net/specs/openid-connect-core-1_0.txt",
+     "OpenID Connect Core 1.0 - 33.180 §5.1 · Annex B 가 인용"),
+]
 
 AREAS = [
     ("msrp", r"MSRP|Message Session Relay"),
@@ -72,7 +93,7 @@ def main():
     refs = json.loads((HERE / "rfc_refs.json").read_text(encoding="utf-8"))
     by_rfc = {int(k): v for k, v in refs["by_rfc"].items()}
     wanted = sorted({n for n, specs in by_rfc.items()
-                     if any(s in RFC_MCX for s in specs)})
+                     if any(s in RFC_MCX for s in specs)} | set(EXTRA_RFCS))
     meta = parse_index(HERE / "rfc-index.txt", set(wanted))
     missing = [n for n in wanted if n not in meta]
     if missing:
@@ -110,6 +131,17 @@ def main():
     with cf.ThreadPoolExecutor(max_workers=6) as ex:
         for n, st in ex.map(one, plan):
             done.append((n, st))
+    for rel, url, _ in EXTRA_DOCS:
+        out = ROOT / rel
+        if out.exists() and out.stat().st_size > 2000:
+            done.append((rel, "SKIP"))
+            continue
+        out.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            out.write_bytes(fetch(url))
+            done.append((rel, "GET"))
+        except Exception as exc:  # noqa: BLE001
+            done.append((rel, f"FAIL {exc}"))
     bad = [x for x in done if x[1].startswith("FAIL")]
     print(f"RFC {len(done)}건 처리, 실패 {len(bad)}건")
     for n, st in bad:

@@ -1,6 +1,6 @@
 # MCX 구현에 필요한 IETF RFC - 최소 집합
 
-손으로 고른 목록이 아니다. **보유한 MCX 본체 규격 16건의 References 절에서 실제로 인용된 RFC** 를 모아 영역별로 나눈 것이다. 모두 108종이며 본문은 `rfc<번호>.txt` 로 들어 있다.
+손으로 고른 목록이 아니다. **보유한 MCX 본체 규격 16건의 References 절에서 실제로 인용된 RFC** 를 모아 영역별로 나눈 것이다. 108종이다. 여기에 MCX 클라이언트 구현이 근거로 쓰지만 MCX 본체가 직접 인용하지 않는 RFC 9종(26 계열 · 국방 변형 근거, `fetch_rfc.py` 의 `EXTRA_RFCS`)을 더해 모두 117종이다. 본문은 `rfc<번호>.txt` 로 들어 있고, 인용 규격 열에 '근거:' 로 적힌 것이 더한 RFC 다.
 
 근거로 삼은 규격: 24.379 · 24.380 · 24.281 · 24.581 · 24.282 · 24.582 · 24.283 · 24.481 · 24.482 · 24.483 · 24.484 · 33.180 · 26.179 · 26.281 · 29.379 · 29.582
 
@@ -66,21 +66,23 @@ affiliation, conference state, 필터.
 | [RFC 6665](sip-events/rfc6665.txt) | SIP-Specific Event Notification | 24.281 · 24.282 · 24.379 · 29.379 · 29.582 | 갱신 RFC7621 |
 | [RFC 7614](sip-events/rfc7614.txt) | Explicit Subscriptions for the REFER Method | 24.281 · 24.379 |  |
 
-## SDP (`sdp`, 7종)
+## SDP (`sdp`, 9종)
 
 오퍼/앤서와 미디어 기술. 대역폭 시그널링의 기반이다.
 
 | RFC | 제목 | 인용 규격 | 비고 |
 | --- | --- | --- | --- |
 | [RFC 3264](sdp/rfc3264.txt) | An Offer/Answer Model with Session Description Protocol (SDP) | 24.281 · 24.379 (+26.114) | 갱신 RFC6157, RFC8843, RFC9143 |
+| [RFC 3556](sdp/rfc3556.txt) | Session Description Protocol (SDP) Bandwidth Modifiers for RTP Control Protocol (RTCP) Bandwidth |  (+26.114) 근거: b=RS · b=RR (24.229 §6.1.1 이 인용) |  |
 | [RFC 3605](sdp/rfc3605.txt) | Real Time Control Protocol (RTCP) attribute in Session Description Protocol (SDP) | 24.281 · 24.379 |  |
+| [RFC 3890](sdp/rfc3890.txt) | A Transport Independent Bandwidth Modifier for the Session Description Protocol (SDP) | 근거: b=TIAS (26.114 준용) |  |
 | [RFC 4566](sdp/rfc4566.txt) | SDP: Session Description Protocol | 24.281 · 24.282 · 24.379 · 24.481 · 24.483 · 29.379 (+26.114) | **폐기** - 후속 RFC8866 |
 | [RFC 4567](sdp/rfc4567.txt) | Key Management Extensions for Session Description Protocol (SDP) and Real Time Streaming Protocol (RTSP) | 24.281 · 24.282 · 24.379 · 29.379 · 29.582 |  |
 | [RFC 5547](sdp/rfc5547.txt) | A Session Description Protocol (SDP) Offer/Answer Mechanism to Enable File Transfer | 24.282 |  |
 | [RFC 5576](sdp/rfc5576.txt) | Source-Specific Media Attributes in the Session Description Protocol (SDP) | 24.281 · 24.379 |  |
 | [RFC 5888](sdp/rfc5888.txt) | The Session Description Protocol (SDP) Grouping Framework | 24.282 | 갱신 RFC8843, RFC9143 |
 
-## RTP · RTCP · 페이로드 (`rtp`, 8종)
+## RTP · RTCP · 페이로드 (`rtp`, 13종)
 
 미디어 플레인 전송과 코덱 페이로드.
 
@@ -89,13 +91,18 @@ affiliation, conference state, 필터.
 | [RFC 3095](rtp/rfc3095.txt) | RObust Header Compression (ROHC): Framework and four profiles: RTP, UDP, ESP, and uncompressed | 24.282 · 24.379 · 24.380 | 갱신 RFC3759, RFC4815 |
 | [RFC 3550](rtp/rfc3550.txt) | RTP: A Transport Protocol for Real-Time Applications | 24.281 · 24.379 · 24.380 · 24.581 · 24.582 · 26.179 · 26.281 · 33.180 (+26.114) | 갱신 RFC5506, RFC5761, RFC6051, RFC6222, RFC7022, RFC7160, RFC7164, RFC8083, RFC8108, RFC8860 |
 | [RFC 3551](rtp/rfc3551.txt) | RTP Profile for Audio and Video Conferences with Minimal Control | 26.179 (+26.114) | 갱신 RFC5761, RFC7007, RFC8860 |
+| [RFC 4585](rtp/rfc4585.txt) | Extended RTP Profile for Real-time Transport Control Protocol (RTCP)-Based Feedback (RTP/AVPF) |  (+26.114) 근거: AVPF (26.114 준용) | 갱신 RFC5506, RFC8108 |
 | [RFC 4867](rtp/rfc4867.txt) | RTP Payload Format and File Storage Format for the Adaptive Multi- Rate (AMR) and Adaptive Multi-Rate Wideband (AMR-WB) Audio Codecs | 26.179 (+26.114) |  |
 | [RFC 5225](rtp/rfc5225.txt) | RObust Header Compression Version 2 (ROHCv2): Profiles for RTP, UDP, IP, ESP and UDP-Lite | 24.380 |  |
 | [RFC 5761](rtp/rfc5761.txt) | Multiplexing RTP Data and Control Packets on a Single Port | 24.281 · 24.282 · 24.379 · 24.380 | 갱신 RFC8035, RFC8858 |
 | [RFC 5795](rtp/rfc5795.txt) | The RObust Header Compression (ROHC) Framework | 24.282 · 24.379 · 24.380 |  |
 | [RFC 6184](rtp/rfc6184.txt) | RTP Payload Format for H.264 Video | 26.281 (+26.114) |  |
+| [RFC 7587](rtp/rfc7587.txt) | RTP Payload Format for the Opus Speech and Audio Codec | 근거: Opus 페이로드 |  |
+| [RFC 7741](rtp/rfc7741.txt) | RTP Payload Format for VP8 Video | 근거: VP8 페이로드 |  |
+| [RFC 7798](rtp/rfc7798.txt) | RTP Payload Format for High Efficiency Video Coding (HEVC) |  (+26.114) 근거: H.265 페이로드 |  |
+| [RFC 9628](rtp/rfc9628.txt) | RTP Payload Format for VP9 Video | 근거: VP9 페이로드 |  |
 
-## SRTP (`srtp`, 3종)
+## SRTP (`srtp`, 4종)
 
 미디어 보호. 33.180 의 키 유도가 여기로 연결된다.
 
@@ -104,6 +111,7 @@ affiliation, conference state, 필터.
 | [RFC 3711](srtp/rfc3711.txt) | The Secure Real-time Transport Protocol (SRTP) | 24.380 · 24.581 · 24.582 · 26.179 · 26.281 · 29.582 · 33.180 | 갱신 RFC5506, RFC6904, RFC9335 |
 | [RFC 4771](srtp/rfc4771.txt) | Integrity Transform Carrying Roll-Over Counter for the Secure Real- time Transport Protocol (SRTP) | 33.180 |  |
 | [RFC 7714](srtp/rfc7714.txt) | AES-GCM Authenticated Encryption in the Secure Real-time Transport Protocol (SRTP) | 33.180 |  |
+| [RFC 8269](srtp/rfc8269.txt) | The ARIA Algorithm and Its Use with the Secure Real-Time Transport Protocol (SRTP) | 근거: ARIA SRTP - 국방 변형 | Informational |
 
 ## 키 관리 (MIKEY-SAKKE) (`key-mgmt`, 8종)
 
@@ -158,7 +166,7 @@ MCData SDS · FD 의 미디어 플레인 (24.582).
 | [RFC 7662](oauth/rfc7662.txt) | OAuth 2.0 Token Introspection | 33.180 |  |
 | [RFC 8693](oauth/rfc8693.txt) | OAuth 2.0 Token Exchange | 24.482 |  |
 
-## HTTP · URI (`http`, 7종)
+## HTTP · URI (`http`, 8종)
 
 CSC 인터페이스의 전송.
 
@@ -168,6 +176,7 @@ CSC 인터페이스의 전송.
 | [RFC 2392](http/rfc2392.txt) | Content-ID and Message-ID Uniform Resource Locators | 24.281 · 24.282 · 24.379 · 33.180 |  |
 | [RFC 2818](http/rfc2818.txt) | HTTP Over TLS | 24.482 | **폐기** - 후속 RFC9110 / 갱신 RFC5785, RFC7230 / Informational |
 | [RFC 3986](http/rfc3986.txt) | Uniform Resource Identifier (URI): Generic Syntax | 24.282 · 24.484 · 29.379 · 29.582 | 갱신 RFC7320, RFC8820 |
+| [RFC 7616](http/rfc7616.txt) | HTTP Digest Access Authentication | 근거: HTTP Digest - SIP Digest 응답 계산, 33.203 Annex N 이 인용 |  |
 | [RFC 9110](http/rfc9110.txt) | HTTP Semantics | 24.282 · 24.481 · 24.482 |  |
 | [RFC 9112](http/rfc9112.txt) | HTTP/1.1 | 24.282 · 24.482 (+26.114) | 갱신 RFC9931 |
 | [RFC 9113](http/rfc9113.txt) | HTTP/2 | 24.283 · 24.482 |  |
@@ -242,12 +251,12 @@ RFC7159 RFC7462 RFC7521 RFC7523 RFC7614 RFC7647 RFC7714 RFC8086 RFC8200 RFC8259
 RFC8693 RFC8839 RFC9110 RFC9112 RFC9113 RFC9562
 ```
 
-**빠진 28종** - 기존 목록에는 있으나 MCX 본체 16건은 인용하지 않는다. 대부분 24.229 · 26.114 · 33.402 · 24.302 쪽에서 오는 IMS·접속 기반이라 이 최소 집합의 대상이 아니다.
+**빠진 26종** - 기존 목록에는 있으나 MCX 본체 16건은 인용하지 않는다. 대부분 24.229 · 26.114 · 33.402 · 24.302 쪽에서 오는 IMS·접속 기반이라 이 최소 집합의 대상이 아니다.
 
 ```
 RFC3265 RFC4186 RFC4187 RFC4474 RFC4662 RFC4733 RFC5245 RFC5246 RFC5280 RFC5389
-RFC5448 RFC5766 RFC5768 RFC6066 RFC7009 RFC7315 RFC7469 RFC7516 RFC7587 RFC7656
-RFC7742 RFC7798 RFC7989 RFC8224 RFC8446 RFC8489 RFC8656 RFC8866
+RFC5448 RFC5766 RFC5768 RFC6066 RFC7009 RFC7315 RFC7469 RFC7516 RFC7656 RFC7742
+RFC7989 RFC8224 RFC8446 RFC8489 RFC8656 RFC8866
 ```
 
 ## 갱신
@@ -259,3 +268,5 @@ python _tools/fetch_rfc.py          # 내려받기
 ```
 
 `_tools/rfc-index.txt` (RFC Editor 공식 색인) 를 함께 읽는다. 제목·폐기·갱신 정보는 거기서 읽는다.
+
+IETF 가 아닌 근거 문서도 `fetch_rfc.py` 가 받는다: `11-openid/openid-connect-core-1_0.txt` - OpenID Connect Core 1.0 - 33.180 §5.1 · Annex B 가 인용.

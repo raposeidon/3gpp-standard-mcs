@@ -8,6 +8,8 @@
 그림 중 EMF · WMF 는 Markdown 뷰어가 못 그리므로 PNG 를 함께 만들어 md 가 PNG 를
 가리키게 한다. Windows 는 GDI+(PowerShell System.Drawing)로, 그 밖에는 Inkscape 가
 있으면 그것으로 그린다. 둘 다 없거나 그리기에 실패한 그림은 원래 파일을 가리킨다.
+그린 PNG 는 Pillow 로 32색 팔레트로 줄인다 - 3GPP 그림은 선 그림이라 눈으로 차이가 없고
+크기가 약 40% 가 된다. Pillow 가 없으면 pip 로 설치한 뒤 쓴다.
 --no-png 를 주면 이 단계를 건너뛴다.
 
 3GPP 문서는 스타일이 정형화돼 있어 스타일 이름만으로 구조를 구분한다.
@@ -30,7 +32,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
-from common import load_specs, main_doc, spec_dir, cover, zip_url
+from common import load_release, load_specs, main_doc, spec_dir, stem_of, cover, zip_url
 
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
@@ -96,9 +98,10 @@ def on(rpr, tag):
 
 
 class Converter:
-    def __init__(self, z, out_dir):
+    def __init__(self, z, out_dir, media_prefix=""):
         self.z = z
         self.out_dir = out_dir
+        self.media_prefix = media_prefix   # 파트 문서끼리 그림 이름(image1.emf)이 겹치지 않게 붙인다
         self.media = {}
         self.metafiles = []     # (원본 이름, PNG 이름) - EMF · WMF 만
         self.names = {posixpath.basename(n) for n in z.namelist()
@@ -134,7 +137,7 @@ class Converter:
             return ""
         if target not in self.media:
             src = posixpath.normpath(posixpath.join("word", target))
-            name = posixpath.basename(src)
+            name = self.media_prefix + posixpath.basename(src)
             try:
                 data = self.z.read(src)
             except KeyError:
@@ -367,6 +370,7 @@ class Converter:
 METAFILE_EXT = (".emf", ".wmf")
 FIG_DPI = 200       # 그림 해상도. 3GPP 그림은 대개 A4 본문 폭 이하라 200 이면 글자가 읽힌다
 FIG_MAX_PX = 4000   # 한 변 상한 - 쪽 전체 크기로 잘못 잡힌 메타파일이 거대한 PNG 가 되지 않게
+FIG_COLORS = 32     # 팔레트 색 수. 선 그림 · 회색 음영 · 강조 몇 색이 들어가는 크기
 INKSCAPE_PATHS = [r"C:\Program Files\Inkscape\bin\inkscape.exe",
                   "/Applications/Inkscape.app/Contents/MacOS/inkscape"]
 
@@ -463,6 +467,24 @@ def metafile_renderer():
     return None
 
 
+def require_pillow():
+    """Pillow 의 Image 모듈. 없으면 pip 로 설치한 뒤 들여온다."""
+    try:
+        from PIL import Image
+    except ImportError:
+        print("Pillow 가 없어 설치한다: pip install pillow", flush=True)
+        subprocess.run([sys.executable, "-m", "pip", "install", "pillow"], check=True)
+        from PIL import Image
+    return Image
+
+
+def shrink_png(image_mod, png):
+    """그린 PNG 를 FIG_COLORS 색 팔레트로 줄여 같은 이름에 다시 쓴다."""
+    with image_mod.open(png) as im:
+        q = im.convert("RGB").quantize(colors=FIG_COLORS, method=image_mod.Quantize.MEDIANCUT)
+    q.save(png, optimize=True)
+
+
 def render_metafiles(conv, out_dir, renderer):
     """EMF · WMF 를 PNG 로 그린다. (그린 수, 실패 [(원본, PNG, 사유)])."""
     if not conv.metafiles:
@@ -478,9 +500,12 @@ def render_metafiles(conv, out_dir, renderer):
     except (RuntimeError, OSError, subprocess.TimeoutExpired) as exc:
         return 0, [(n, p, str(exc)[:200]) for n, p in conv.metafiles]
     bad = []
+    image_mod = require_pillow()
     for i, ((n, p), (_, dst)) in enumerate(zip(conv.metafiles, pairs)):
         if i in fails or not dst.is_file():
             bad.append((n, p, fails.get(i, "PNG 없음")))
+        else:
+            shrink_png(image_mod, dst)
     return len(pairs) - len(bad), bad
 
 
@@ -577,16 +602,18 @@ def doc_converter():
 
 def convert_one(e, force, doc_conv, fig_conv=None):
     d = spec_dir(e)
-    doc, code = main_doc(d, e["spec"])
+    doc, code = main_doc(d, e["spec"], e, load_release())
     if doc is None:
         return "MISSING", "본문 없음 (fetch 먼저)"
     is_doc = doc.suffix.lower() == ".doc"
     if is_doc and doc_conv is None:
         return "DOC", f"{doc.name} (LibreOffice · Word 없음)"
     md = d / f"{doc.stem}.md"
-    if md.exists() and not force and md.stat().st_mtime >= doc.stat().st_mtime:
-        return "SKIP", md.name
     _, url = zip_url(e["spec"], code)
+    if md.exists() and not force and md.stat().st_mtime >= doc.stat().st_mtime:
+        if e.get("parts"):
+            return "SKIP", md.name + " / " + convert_parts(e, d, doc, code, url, cover(doc), force, doc_conv, fig_conv)
+        return "SKIP", md.name
     # Word 가 종료 직후 잠시 파일을 잡고 있어 임시 폴더 정리 실패는 무시한다
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
         src = doc_conv[1](doc, Path(tmp)) if is_doc else doc
@@ -621,8 +648,71 @@ def convert_one(e, force, doc_conv, fig_conv=None):
         fig = f", PNG {n_png}/{len(conv.metafiles)}"
         if bad and n_png:
             fig += f" (실패 예: {bad[0][0]} - {bad[0][2][:80]})"
-    return "MD", (f"{md.name} ({md.stat().st_size / 1e6:.1f} MB, 그림 {len(conv.media)}"
-                  f"{fig}{via})")
+    msg = (f"{md.name} ({md.stat().st_size / 1e6:.1f} MB, 그림 {len(conv.media)}"
+           f"{fig}{via})")
+    if e.get("parts"):
+        msg += " / " + convert_parts(e, d, doc, code, url, c, force, doc_conv, fig_conv)
+    return "MD", msg
+
+
+def part_docs(d, spec, code):
+    """장별로 나뉜 파트 문서(<번호>-<판>_<파트>_....doc/.docx). 같은 이름이면 docx 를 고른다."""
+    prefix = f"{stem_of(spec)}-{code}_"
+    found = {}
+    for p in sorted(d.iterdir()):
+        if p.is_file() and p.name.lower().startswith(prefix) and p.suffix.lower() in (".doc", ".docx"):
+            if p.stem not in found or p.suffix.lower() == ".docx":
+                found[p.stem] = p
+    return list(found.values())
+
+
+def convert_parts(e, d, main, code, url, c, force, doc_conv, fig_conv):
+    """specs.json 항목의 "parts"(파트 표지 목록, 예 ["a"])에 든 파트 문서마다 <파트 문서 이름>.md 를 만든다.
+    코덱 알고리즘 본문처럼 근거로 쓰지 않는 파트는 수식 그림이 수천 개라 목록에서 뺀다 (26.445 는 Annex A 만).
+
+    표지는 본문(main)의 것을 쓴다. 그림은 media/<파트>_<원래 이름> 으로 둔다.
+    """
+    done, skipped, bad = [], [], []
+    for part in part_docs(d, e["spec"], code):
+        md = d / f"{part.stem}.md"
+        if md.exists() and not force and md.stat().st_mtime >= part.stat().st_mtime:
+            skipped.append(md.name)
+            continue
+        is_doc = part.suffix.lower() == ".doc"
+        if is_doc and doc_conv is None:
+            bad.append(f"{part.name}(.doc 변환기 없음)")
+            continue
+        tag = part.stem[len(f"{stem_of(e['spec'])}-{code}_"):].split("_", 1)[0]
+        if tag not in e["parts"]:
+            continue
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            src = doc_conv[1](part, Path(tmp)) if is_doc else part
+            with zipfile.ZipFile(src) as z:
+                conv = Converter(z, d, media_prefix=f"{tag}_")
+                body = conv.convert()
+        if fig_conv is not False:
+            _, fails = render_metafiles(conv, d, fig_conv)
+            for n, pn, _ in fails:
+                body = body.replace(f"](media/{pn})", f"](media/{n})")
+        kind = (c["kind"] or e["kind"]).upper()
+        head = ["---",
+                f"spec: {yaml_str(kind + ' ' + e['spec'])}",
+                f"title: {yaml_str(c['title'])}",
+                f"version: {yaml_str(c['ver'])}",
+                f"release: {c['release'] if c['release'] is not None else 'null'}",
+                f"date: {yaml_str(c['date'])}",
+                f"part: {yaml_str(part.stem)}",
+                f"source: {yaml_str(url)}",
+                f"converted_from: {yaml_str(part.name)}",
+                "---", ""]
+        md.write_text("\n".join(head) + body, encoding="utf-8", newline="\n")
+        done.append(md.name)
+    out = f"파트 {len(done)}건 변환"
+    if skipped:
+        out += f", {len(skipped)}건 최신"
+    if bad:
+        out += f", 실패 {', '.join(bad)}"
+    return out
 
 
 def main():
@@ -633,6 +723,8 @@ def main():
     doc_conv = doc_converter()
     print(f".doc 변환기: {doc_conv[0] if doc_conv else '없음 (.doc 본문은 건너뜀)'}")
     fig_conv = False if no_png else metafile_renderer()
+    if fig_conv:
+        require_pillow()    # 변환을 시작하기 전에 한 번 - 도중에 설치로 멈추지 않게
     print("EMF · WMF -> PNG: " + ("건너뜀 (--no-png)" if fig_conv is False else
                                  fig_conv[0] if fig_conv else "변환기 없음 (원본 링크 유지)"))
     res = []

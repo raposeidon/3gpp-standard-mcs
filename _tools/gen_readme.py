@@ -6,8 +6,9 @@
 import datetime
 import json
 
-from common import (HERE, RFC_MCX, ROOT, archive_dir_url, cover, doc_code, load_specs,
-                    main_doc, spec_dir, zip_url)
+from common import (HERE, RFC_MCX, ROOT, archive_dir_url, cover, doc_code, load_min_release,
+                    load_release, load_specs, main_doc, spec_dir, zip_url)
+from fetch_rfc import EXTRA_RFCS
 
 SECTIONS = [
     ("00-common", "공통 기반 (MCS Common)",
@@ -68,7 +69,7 @@ def collect():
     rows = []
     for e in load_specs():
         d = spec_dir(e)
-        doc, code = main_doc(d, e["spec"])
+        doc, code = main_doc(d, e["spec"], e, load_release())
         r = {"e": e, "doc": doc, "code": code, "meta": None, "parts": [],
              "md": bool(doc) and (d / f"{doc.stem}.md").exists()}
         if doc:
@@ -94,11 +95,14 @@ def table(rows):
         if r["doc"].suffix.lower() == ".doc":
             notes.append(".doc 원문 (임시 docx 로 바꿔 md 변환)" if r["md"]
                          else "**.doc 원문 그대로 (md 변환 안 함)**")
-        if r["parts"]:
+        if r["parts"] and e.get("parts"):
+            notes.append(f"**본문이 장별 조각으로 나뉨 - "
+                         f"{' · '.join('Annex ' + p.upper() for p in e['parts'])} 조각만 md 변환(`parts`)**")
+        elif r["parts"]:
             notes.append(f"**본문이 장별 조각으로 나뉨 - 조각 {len(r['parts'])}건은 md 변환 안 함**")
         notes.append(r["extras"])
         name, url = zip_url(e["spec"], r["code"])
-        out.append(f"| [{name}]({url}) | {(m['kind'] or kind)} {e['spec']} | {m['title']} | "
+        out.append(f"| [{name}]({url}) | {(m['kind'] or kind)} {e['spec']} | {e.get('title') or m['title']} | "
                    f"v{m['ver']} (Rel-{m['release']}, {m['date']}) | "
                    f"{' / '.join(n for n in notes if n)} |")
     return "\n".join(out)
@@ -119,24 +123,31 @@ def main():
     L = []
     L.append("# 3GPP MCX 표준 수집 · Markdown 변환 도구\n")
     L.append("Mission Critical 계열 3GPP 규격을 **3GPP 아카이브에서 받아 서비스별 폴더에 풀고 "
-             "Markdown 으로 변환**하는 스크립트와 그 대상 목록이다. 릴리스를 고정하지 않고 "
-             "**규격마다 그 시점의 최신 버전**을 받으므로 Rel-13 부터 Rel-20 까지 섞인다. "
-             "이는 의도한 것이다.\n")
+             "Markdown 으로 변환**하는 스크립트와 그 대상 목록이다. **판 선택 규칙**: "
+             "`_tools/specs.json` 항목에 `\"version\"` 이 있으면 그 판, 없으면 "
+             "**규격마다 그 시점의 최신 판**이다. 다만 `_tools/release.json` 의 `min_release`"
+             f"(Rel-{load_min_release()}) 미만 판은 받지 않는다. 그래서 그 릴리스부터 최신 릴리스까지 "
+             "섞이며, 이는 의도한 것이다.\n")
     L.append("**3GPP · ITU-T 원문과 그 변환본(md)은 이 저장소에 없다.** 두 기관 모두 서면 허가 "
              "없는 복제를 금지하므로, 스크립트를 돌려 각자 로컬에 받는다. IETF RFC 는 IETF Trust "
              "Legal Provisions 가 수정 없는 전문 배포를 허용하므로 `10-ietf-rfc/` 에 원문 그대로 "
-             "넣어 두었다.\n")
-    L.append(f"- 대상: 3GPP {len(rows)}건 (`_tools/specs.json`) + ITU-T 2건 + IETF RFC {n_rfc}종")
+             "넣어 두었다. `11-openid/` 의 OpenID Connect Core 1.0 도 OpenID Foundation 이 구현 "
+             "목적의 복제 · 배포를 허락하므로 원문 그대로 넣었다. ETSI 원문과 변환본은 3GPP 와 "
+             "같은 이유로 저장소에 없다.\n")
+    L.append(f"- 대상: 3GPP {len(rows)}건 (`_tools/specs.json`) + ITU-T 2건 + ETSI 1건 + "
+             f"IETF RFC {n_rfc}종(본체 인용 {n_rfc - len(EXTRA_RFCS)} + 근거 {len(EXTRA_RFCS)})")
     L.append(f"- 아래 표의 버전: {today} 에 로컬에 받아 둔 판 기준 "
-             f"({len(got)}/{len(rows)}건). 다시 받으면 더 새 판이 나올 수 있다.")
-    L.append("- 출처: <https://www.3gpp.org/ftp/Specs/archive/> · <https://www.itu.int/rec/>\n")
+             f"({len(got)}/{len(rows)}건). 다시 받으면 더 새 판이 나올 수 있다 (`version` 으로 고정한 규격 제외).")
+    L.append("- 출처: <https://www.3gpp.org/ftp/Specs/archive/> · <https://www.itu.int/rec/> · "
+             "<https://www.etsi.org/deliver/>\n")
 
     L.append("## 사용법\n")
     L.append("Python 3 표준 라이브러리만 쓴다. 저장소 루트에서 돌린다. 구형 .doc 본문을 "
-             "변환할 때만 LibreOffice 나 Word(Windows) 가 있으면 쓴다 (아래 제약 참조).\n")
+             "변환할 때만 LibreOffice 나 Word(Windows) 가 있으면 쓴다 (아래 제약 참조). "
+             "그린 PNG 를 줄이는 데 Pillow 를 쓰며, 없으면 `convert_md.py` 가 pip 로 설치한다.\n")
     L.append("```")
-    L.append("python _tools/fetch_3gpp.py --dry-run   # 받을 버전 미리보기")
-    L.append("python _tools/fetch_3gpp.py             # 최신 zip 을 받아 서비스 폴더에 풀기 (zip 은 남기지 않음)")
+    L.append("python _tools/fetch_3gpp.py --dry-run   # 받을 판과 지금 변환본 비교 (받지 않음)")
+    L.append("python _tools/fetch_3gpp.py             # 최신(또는 고정) 판 zip 을 받아 서비스 폴더에 풀기 (zip 은 남기지 않음)")
     L.append("python _tools/convert_md.py             # 본문 docx -> md (이미 변환한 것은 건너뜀)")
     L.append("python _tools/gen_readme.py             # 이 README 재생성")
     L.append("```\n")
@@ -146,12 +157,19 @@ def main():
              "옮길 때는 `_tools/specs.json` 만 고친다 - 받기 · 변환 · README 가 모두 이 목록을 읽는다. "
              "최신 zip 에 동봉 파일이 빠진 판은 그 항목에 `\"attach_from\": \"k00\"` 처럼 "
              "동봉 파일을 가져올 판을 적는다 (폴더에 동봉 파일이 없을 때만 그 판 zip 을 받는다).\n")
+    L.append("판을 고정할 때: `specs.json` 그 항목에 `\"version\": \"k20\"` 처럼 판 코드를 적는다. "
+             "고정한 판이 아카이브에 없으면 받지 않고 오류로 남긴다. 고정한 판은 `min_release` "
+             "미만이어도 받는다. 판 코드 첫 자리가 0 ~ 2 인 승인 전 초안(`_draft-empty/` 의 v0.0.1 등)은 "
+             "릴리스를 나타내지 않아 하한을 적용하지 않는다. 고정하지 않은 규격에 `min_release` 이상 판이 없으면 `BELOW-MIN` "
+             "으로 건너뛴다. 모든 규격을 특정 릴리스 판 "
+             "우선으로 받으려면 `release.json` 의 `target_release` 에 릴리스 번호를 적고(기본 "
+             "`null` - 최신), 한 번만 그렇게 받으려면 `--release=N` 을 준다.\n")
     L.append("클론한 뒤 `git config core.hooksPath _tools/hooks` 를 한 번 실행한다. "
              "`.gitignore` 가 제외하는 파일(원문 · 변환본)이 `git add -f` 로 스테이징되면 "
              "pre-commit 훅이 커밋을 거부한다.\n")
 
     L.append("## 폴더 구조\n")
-    L.append("저장소에는 `10-ietf-rfc/` 와 `_tools/` 만 들어 있다. 나머지는 스크립트가 원문을 "
+    L.append("저장소에는 `10-ietf-rfc/` · `11-openid/` · `_tools/` 만 들어 있다. 나머지는 스크립트가 원문을 "
              "받아 채우는 자리다. `.gitignore` 는 허용 목록 방식이라 `specs.json` 에 새 서비스 "
              "폴더가 생겨도 추적되지 않는다.\n")
     L.append("```")
@@ -169,7 +187,9 @@ def main():
     L.append("08-interworking  LMR 연동")
     L.append("09-conformance   적합성 시험")
     L.append("   _draft-empty/ 본문 없는 v0.0.1 판")
+    L.append("   etsi-ts-103.564/ ETSI Plugtests 시나리오 (PDF 에서 변환, 수동으로 받는다)")
     L.append("10-ietf-rfc      IETF RFC 최소 집합 (영역별, 저장소에 포함)")
+    L.append("11-openid        IETF 가 아닌 근거 문서 - OpenID Connect Core 1.0 (저장소에 포함)")
     L.append("_tools           수집 · 변환 · 생성 스크립트 (저장소에 포함)")
     L.append("```\n")
     L.append("규격 하나는 `<서비스>/<ts|tr>-<번호>/` 에 들어간다. 아카이브 zip 은 메모리에서 "
@@ -187,11 +207,14 @@ def main():
              + (": " + " · ".join(docs) if docs else "") + ".")
     if parts:
         L.append(f"- **본문이 장별 파일로 나뉜 규격은 표지 docx 만 변환된다.** {' · '.join(parts)} "
-                 "가 해당하며, 나머지 조각(대부분 .doc)은 원문 그대로 남는다.")
+                 "가 해당하며, 나머지 조각(대부분 .doc)은 원문 그대로 남는다. `specs.json` 항목에 "
+                 "`\"parts\": [\"a\"]` 처럼 파트 표지를 적으면 그 조각도 `<조각 이름>.md` 로 변환한다 "
+                 "(26.445 는 코덱 알고리즘 본문의 수식 그림이 수천 개라 Annex A 만 적었다).")
     L.append("- **EMF · WMF 그림은 PNG 를 함께 만든다.** 3GPP 그림은 대부분 EMF · WMF 라 Markdown "
              "뷰어가 그리지 못한다. `media/` 에 원본을 빼낸 뒤 Windows 는 GDI+ 로, 그 밖에는 "
-             "Inkscape 가 있으면 그것으로 PNG 를 만들어 md 가 PNG 를 가리키게 한다. 둘 다 없거나 "
-             "그리기에 실패한 그림은 원본 링크로 남는다 (`--no-png` 로 이 단계를 끌 수 있다). "
+             "Inkscape 가 있으면 그것으로 PNG 를 만들어 md 가 PNG 를 가리키게 한다. 그린 PNG 는 "
+             "Pillow 로 32색 팔레트로 줄인다(선 그림이라 눈으로 차이가 없고 크기가 약 40% 가 된다). "
+             "둘 다 없거나 그리기에 실패한 그림은 원본 링크로 남는다 (`--no-png` 로 이 단계를 끌 수 있다). "
              "PNG 도 원문에서 나온 것이라 저장소에 올리지 않는다.")
     L.append("- **표의 병합 셀은 펼친다.** Markdown 표에 병합이 없어 가로 병합은 빈 칸으로, 세로 "
              "병합은 첫 행에만 내용을 둔다. 한 칸짜리 표(코드 · 그림 상자)는 표로 만들지 않고 "
@@ -212,6 +235,26 @@ def main():
             L.append(desc + "\n")
         L.append(table(sec) + "\n")
 
+    L.append("## ETSI 규격 (`09-conformance/etsi-ts-103.564`)\n")
+    L.append("ETSI TS 103 564 는 MCX Plugtests(여러 벤더 장비를 실제로 붙여 보는 행사)의 시나리오 모음이다. "
+             "동작 근거가 아니라 상호운용 시험 목록으로 쓴다. 3GPP 아카이브에 없어 `fetch_3gpp.py` 가 "
+             "받지 않으므로 아래 주소에서 PDF 를 받고, 원문이 PDF 라 `convert_md.py` 가 아니라 "
+             "`_tools/convert_etsi_pdf.py`(pdfplumber - `python -m pip install pdfplumber`)로 변환한다.\n")
+    L.append("```")
+    L.append("python _tools/convert_etsi_pdf.py <받은 PDF>   # -> 09-conformance/etsi-ts-103.564/<PDF 이름>.md")
+    L.append("```\n")
+    L.append("- 글꼴로 구조를 나눈다. Helvetica 11pt 이상은 절 제목, Courier 는 메시지 예시 코드 블록, "
+             "선으로 그은 표 중 Helvetica 9pt 가 60% 이상인 것은 Markdown 표다. 규칙 전체는 도구 머리 "
+             "주석에 있다.")
+    L.append("- **그림은 넣지 않는다.** 시퀀스 그림의 글자가 2 ~ 3pt 라 텍스트로 읽을 수 없어 버리고 "
+             "`> [그림 생략 - 원문 PDF p.N]` 한 줄을 남긴다. 쪽을 넘는 표는 쪽마다 따로 표가 되고, "
+             "목차는 버린다.\n")
+    L.append("| 원문 (PDF) | 표준 | 공식 명칭 | 버전 | 비고 |")
+    L.append("| --- | --- | --- | --- | --- |")
+    L.append("| [ts_103564v010601p.pdf](https://www.etsi.org/deliver/etsi_ts/103500_103599/103564/"
+             "01.06.01_60/ts_103564v010601p.pdf) | ETSI TS 103 564 | Plugtests scenarios for Mission "
+             "Critical Services | V1.6.1 (2024-04) | PDF 원문 (그림은 넣지 않고 쪽 번호만 남긴다) |\n")
+
     L.append("## ITU-T 권고 (`07-media-codec/itu-t`)\n")
     L.append("HEVC · AVC 는 3GPP 규격이 아니라 ITU-T 권고다. 3GPP 아카이브에 없으므로 "
              "`fetch_3gpp.py` 가 받지 않는다. 26.281 (MCVideo 코덱) 과 26.114 (MTSI 미디어 "
@@ -229,8 +272,10 @@ def main():
              "H.265 를 선택으로 규정하고 VVC 는 대상이 아니기 때문이다.\n")
 
     L.append("## IETF RFC (`10-ietf-rfc`)\n")
-    L.append(f"MCX 본체 규격 {len(RFC_MCX)}건의 References 절에서 실제로 인용된 RFC {n_rfc}종을 "
-             "영역별로 받아 두었다. 목록과 인용 규격 대응은 "
+    L.append(f"MCX 본체 규격 {len(RFC_MCX)}건의 References 절에서 실제로 인용된 RFC "
+             f"{n_rfc - len(EXTRA_RFCS)}종과, MCX 클라이언트 구현이 근거로 쓰지만 본체가 인용하지 않는 "
+             f"RFC {len(EXTRA_RFCS)}종(코덱 페이로드 · SDP 대역폭 · SIP Digest · ARIA SRTP - "
+             "`fetch_rfc.py` 의 `EXTRA_RFCS`)을 영역별로 받아 두었다. 목록과 인용 규격 대응은 "
              "[10-ietf-rfc/README.md](10-ietf-rfc/README.md) 에 있다. "
              "26.114 (MTSI) 와 24.229 (IMS) 는 인용 폭이 넓어 그 집합에서 뺐다.\n")
 
@@ -239,9 +284,8 @@ def main():
              "두 문서의 Release 가 같은지 먼저 확인한다.")
     L.append("- **`_draft-empty/` 6건은 본문이 없다.** 제목만 있고 시험 케이스가 들어 있지 않다. "
              "검색 결과에 섞여 나와 실제 시험 규격으로 오인되는 것을 막으려고 분리해 두었다.")
-    L.append("- **TR 33.879 는 Rel-13 에서 멈춘 MCPTT 전용 설계 배경 TR 이다.** "
-             "보안 규격은 33.180 을 보고, 같은 Rel-13 구판이던 TS 33.179 는 "
-             "내용이 33.180 으로 이관돼 대상에서 뺐다.")
+    L.append("- **보안 규격은 33.180 을 본다.** Rel-13 에서 멈춘 TS 33.179(내용이 33.180 으로 이관)와 "
+             "TR 33.879(MCPTT 보안 설계 배경)는 최소 릴리스 미만이라 대상에서 뺐다.")
     L.append("- **MCX IWF 프로토콜은 29.379 · 29.380 · 29.582 셋이다.** "
              "29.387 · 29.388 · 29.389 는 V2X, 29.579 는 SMS 연동으로 "
              "번호만 이웃일 뿐이다.")

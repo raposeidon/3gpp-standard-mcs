@@ -7,6 +7,7 @@
 !/README.md
 !/_tools/
 !/10-ietf-rfc/
+!/11-openid/
 
 # 허용한 폴더 안에서도 추적할 파일만 다시 연다. 변환본 md · 그림 · 동봉 XSD 를
 # 그 안에 잘못 저장해도 막히도록 확장자 금지 목록이 아니라 허용 목록으로 둔다.
@@ -15,10 +16,13 @@
 !/10-ietf-rfc/**/
 !/10-ietf-rfc/README.md
 !/10-ietf-rfc/**/rfc*.txt
+/11-openid/**
+!/11-openid/*.txt
 /_tools/**
 !/_tools/**/
 !/_tools/*.py
 !/_tools/specs.json
+!/_tools/release.json
 !/_tools/rfc_plan.json
 !/_tools/rfc_refs.json
 !/_tools/rfc-index.txt

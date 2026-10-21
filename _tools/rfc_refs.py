@@ -4,7 +4,7 @@ import re
 import zipfile
 from collections import defaultdict
 
-from common import HERE, PARA, RFC_SPECS, load_specs, main_doc, para_text, spec_dir
+from common import HERE, PARA, RFC_SPECS, load_release, load_specs, main_doc, para_text, spec_dir
 
 RFC = re.compile(r"RFC\s*(\d{3,5})", re.I)
 
@@ -44,7 +44,7 @@ def main():
         spec = e["spec"]
         if spec not in RFC_SPECS:
             continue
-        doc, _ = main_doc(spec_dir(e), spec)
+        doc, _ = main_doc(spec_dir(e), spec, e, load_release())
         if not doc:
             continue
         sec = refs_section(full_text(doc))

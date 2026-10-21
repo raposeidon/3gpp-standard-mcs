@@ -3,6 +3,7 @@ import json
 import re
 
 from common import HERE, RFC_MCX as MCX, ROOT
+from fetch_rfc import EXTRA_DOCS, EXTRA_RFCS
 
 DEST = ROOT / "10-ietf-rfc"
 
@@ -49,16 +50,23 @@ def cites(n):
     out = " · ".join(specs)
     if extra:
         out += f" (+{' · '.join(extra)})"
+    if n in EXTRA_RFCS and not specs:
+        out = (out + " " if out else "") + f"근거: {EXTRA_RFCS[n]}"
     return out
 
 
 def main():
     got = {p["rfc"] for p in PLAN}
+    extra_only = {n for n in EXTRA_RFCS if not any(s in MCX for s in BY.get(n, []))}
+    n_core = len(got - extra_only)
     L = []
     L.append("# MCX 구현에 필요한 IETF RFC - 최소 집합\n")
     L.append(f"손으로 고른 목록이 아니다. **보유한 MCX 본체 규격 {len(MCX)}건의 References 절에서 "
              "실제로 인용된 RFC** 를 모아 영역별로 나눈 것이다. "
-             f"모두 {len(PLAN)}종이며 본문은 `rfc<번호>.txt` 로 들어 있다.\n")
+             f"{n_core}종이다. 여기에 MCX 클라이언트 구현이 근거로 쓰지만 MCX 본체가 직접 "
+             f"인용하지 않는 RFC {len(extra_only)}종(26 계열 · 국방 변형 근거, `fetch_rfc.py` 의 "
+             f"`EXTRA_RFCS`)을 더해 모두 {len(PLAN)}종이다. 본문은 `rfc<번호>.txt` 로 들어 있고, "
+             "인용 규격 열에 '근거:' 로 적힌 것이 더한 RFC 다.\n")
     L.append("근거로 삼은 규격: " + " · ".join(MCX) + "\n")
     L.append("- **26.114 (MTSI) 와 24.229 (IMS) 는 뺐다.** MCX 전용이 아니고 인용 폭이 "
              "넓어 최소 집합의 뜻이 사라진다 - 24.229 한 건이 RFC 247종을 언급한다. "
@@ -118,7 +126,7 @@ def main():
     L.append("## 기존 큐레이션 목록과의 차이\n")
     L.append("이 집합을 만들기 전에 손으로 골라 두었던 "
              f"{len(CURATED)}종과 대조한 결과다.\n")
-    only_new = sorted(got - CURATED)
+    only_new = sorted(got - CURATED - extra_only)
     only_old = sorted(CURATED - got)
     L.append(f"**새로 들어온 {len(only_new)}종** - 기존 목록에 없었지만 MCX 본체가 "
              "실제로 인용한다.\n")
@@ -141,6 +149,8 @@ def main():
     L.append("```\n")
     L.append("`_tools/rfc-index.txt` (RFC Editor 공식 색인) 를 함께 읽는다. "
              "제목·폐기·갱신 정보는 거기서 읽는다.\n")
+    for rel, _, why in EXTRA_DOCS:
+        L.append(f"IETF 가 아닌 근거 문서도 `fetch_rfc.py` 가 받는다: `{rel}` - {why}.\n")
 
     out = DEST / "README.md"
     out.write_text("\n".join(L), encoding="utf-8")
